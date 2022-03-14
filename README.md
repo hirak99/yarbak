@@ -28,13 +28,22 @@ Major similarities are -
 
 Simply clone this repo, and use python3 to run the code.
 
-## Example Call
+## Example Usage
 
 Backup home directory -
 
-```python
-python path/to/yaribak.py \
-  --source ~ \
-  --backup-path /mnt/backup/backup_home
+```bash
+python3 path/to/yaribak.py \
+  --source path/to/source \
+  --backup-path path/to/backups
 ```
 
+The following structure will be generated in the backup directory (for this example, after 3 calls) -
+```
+$ ls path/to/backups
+_backup_20220306_232441
+_backup_20220312_080749
+_backup_20220314_110741
+```
+
+Any unchanged file between any two backups will be hard linked to the same inode. So overall space consumption between two successive backups will be small if there are no unchanged files.
