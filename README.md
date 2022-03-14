@@ -22,12 +22,18 @@ Major similarities are -
 * Does not require additional space when there is no change
 * Uses hard links to replicate entire folder structure on any of the backups
 
+# Setup and Usage
+
+## Setup
+
+Simply clone this repo, and use python3 to run the code.
+
 ## Example Call
 
 Backup home directory -
 
 ```python
-python rsync_incremental.py \
+python path/to/yaribak.py \
   --source ~ \
   --backup-path /mnt/backup/backup_home
 ```
