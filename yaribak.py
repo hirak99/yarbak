@@ -13,8 +13,8 @@ import subprocess
 from typing import List
 
 # TODO: Include option to omit backup if run within some period of last backup.
-# TODO: Add --exclude
-# TODO: Add tests
+# TODO: Add --exclude.
+# TODO: Add tests.
 
 
 def _times_str() -> str:
@@ -44,12 +44,12 @@ def _get_commands(source: str, target: str) -> List[str]:
   new_backup = os.path.join(target, prefix + _times_str())
   if folders:
     latest = max(folders)
-    commands.append(f'sudo cp -al {latest} {new_backup}')
+    commands.append(f'cp -al {latest} {new_backup}')
     # Rsync version, echoes the directories being copied.
     # commands.append(
-    #     f'sudo rsync -aAXHv {latest}/ {new_backup}/ --link-dest={latest}')
+    #     f'rsync -aAXHv {latest}/ {new_backup}/ --link-dest={latest}')
   commands.append(
-    f'sudo rsync -aAXHv --delete --progress {source}/ {new_backup}')
+    f'rsync -aAXHv --delete --progress {source}/ {new_backup}')
   return commands
 
 
