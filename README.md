@@ -26,14 +26,20 @@ Major similarities are -
 
 ## Setup
 
-Simply clone this repo, and use python3 to run the code.
+Run the following -
+
+```
+sudo pip3 install yaribak
+```
+
+You can leave out the `sudo` in most distributions, or if you don't want to backup with super-user privileges.
 
 ## Example Usage
 
 Backup home directory -
 
 ```bash
-python3 path/to/yaribak.py \
+yaribak \
   --source path/to/source \
   --backup-path path/to/backups
 ```
@@ -46,4 +52,6 @@ _backup_20220312_080749
 _backup_20220314_110741
 ```
 
-Any unchanged file between any two backups will be hard linked to the same inode. So overall space consumption between two successive backups will be small if there are no unchanged files.
+Each directory will have a full copy of the source.
+
+_However_, any file that remains unchanged will be hard linked, preserving space.

@@ -1,7 +1,7 @@
 """Incremental backup creator
 
 Example run -
-  python rsync_incremental.py \
+  python yaribak.py \
     --source ~ \
     --backup-path /mnt/backup_drive/backup_home
 """
@@ -48,8 +48,7 @@ def _get_commands(source: str, target: str) -> List[str]:
     # Rsync version, echoes the directories being copied.
     # commands.append(
     #     f'rsync -aAXHv {latest}/ {new_backup}/ --link-dest={latest}')
-  commands.append(
-    f'rsync -aAXHv --delete --progress {source}/ {new_backup}')
+  commands.append(f'rsync -aAXHv --delete --progress {source}/ {new_backup}')
   return commands
 
 
@@ -58,10 +57,19 @@ def _execute(command: str) -> None:
 
 
 def main():
-  parser = argparse.ArgumentParser('incremental_backup')
-  parser.add_argument('--source', type=str, required=True)
-  parser.add_argument('--backup-path', type=str, required=True)
-  parser.add_argument('--dry-run', action='store_true')
+  parser = argparse.ArgumentParser('yaribak')
+  parser.add_argument('--source',
+                      type=str,
+                      required=True,
+                      help='Source path to backup.')
+  parser.add_argument('--backup-path',
+                      type=str,
+                      required=True,
+                      help=('Destination path to backup to. '
+                            'Backup directories will be created here.'))
+  parser.add_argument('--dry-run',
+                      action='store_true',
+                      help='Do not make any change.')
   args = parser.parse_args()
   source = _absolute_path(args.source)
   target = _absolute_path(args.backup_path)
@@ -74,7 +82,7 @@ def main():
     if not dry_run:
       _execute(command)
   if dry_run:
-    print('Nothing changed since called with --dry-run.')
+    print('Called with --dry-run, nothing was changed.')
   else:
     print(f'{len(commands)} commands executed.')
 
