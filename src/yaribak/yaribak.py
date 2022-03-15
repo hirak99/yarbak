@@ -12,6 +12,7 @@ import subprocess
 
 from typing import List
 
+# TODO: Move the backups to a payload/ subdirectory (so we can add metadata laetr).
 # TODO: Instead of ValueError, print a legible error message.
 # TODO: Include option to omit backup if run within some period of last backup.
 # TODO: Add --exclude.

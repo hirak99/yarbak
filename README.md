@@ -54,5 +54,5 @@ _However_, any file that remains unchanged will be hard linked, preserving space
 
 From the package root, run -
 ```python
-python3 -m unittest tests/yaribak_test.py
+./runtests.sh
 ```
