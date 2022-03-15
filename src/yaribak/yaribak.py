@@ -15,7 +15,6 @@ from typing import List
 # TODO: Instead of ValueError, print a legible error message.
 # TODO: Include option to omit backup if run within some period of last backup.
 # TODO: Add --exclude.
-# TODO: Add tests.
 
 
 def _times_str() -> str:
