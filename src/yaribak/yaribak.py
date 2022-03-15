@@ -12,6 +12,7 @@ import subprocess
 
 from typing import List
 
+# TODO: Instead of ValueError, print a legible error message.
 # TODO: Include option to omit backup if run within some period of last backup.
 # TODO: Add --exclude.
 # TODO: Add tests.
@@ -29,9 +30,6 @@ def _absolute_path(path: str) -> str:
 
 
 def _get_commands(source: str, target: str) -> List[str]:
-  if not os.path.isdir(target):
-    # Do not proceed if destination does not exist.
-    raise ValueError(f'Destination {target!r} does not exist')
   commands = []
   if not os.path.isdir(target):
     raise ValueError(f'{target!r} is not a valid directory')

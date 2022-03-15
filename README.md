@@ -5,22 +5,14 @@ Yet another rsync based incremental backup utility.
 A simple wrapper to use over rsync, to maintain incremental backups in differnet
 directories.
 
+# Alternatives
+
 ## Comparison with Timeshift
-This replicates part of timeshift's functionality.
+This replicates part of timeshift's functionality. This allows control over the
+backup directory, while sacrificing GUI and cron integration.
 
-Intendended to complement timeshift in backing up non-system directories.
-
-Although this can be used to backup the root system, timeshift may be a better
-option for that since it allows pretty safe restoring of the system.
-
-Major differences from timeshift are -
-* Allows you to choose destination directory
-* Does not provide any automated restore functionality
-* Can only be used from command line
-
-Major similarities are -
-* Does not require additional space when there is no change
-* Uses hard links to replicate entire folder structure on any of the backups
+Also, although this can be used to backup the root system, timeshift may be a
+better option for that since it allows pretty safe restoring of the system.
 
 # Setup and Usage
 
@@ -28,11 +20,12 @@ Major similarities are -
 
 Run the following -
 
-```
+```bash
 sudo pip3 install yaribak
 ```
 
-You can leave out the `sudo` in most distributions, or if you don't want to backup with super-user privileges.
+You can leave out the `sudo` in most distributions, or if you don't want to
+backup with super-user privileges.
 
 ## Example Usage
 
@@ -44,7 +37,8 @@ yaribak \
   --backup-path path/to/backups
 ```
 
-The following structure will be generated in the backup directory (for this example, after 3 calls) -
+The following structure will be generated in the backup directory (for this
+example, after 3 calls) -
 ```
 $ ls path/to/backups
 _backup_20220306_232441
@@ -55,3 +49,10 @@ _backup_20220314_110741
 Each directory will have a full copy of the source.
 
 _However_, any file that remains unchanged will be hard linked, preserving space.
+
+# Testing
+
+From the package root, run -
+```python
+python3 -m unittest tests/yaribak_test.py
+```

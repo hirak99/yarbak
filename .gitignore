@@ -1,3 +1,5 @@
 dist/*
 yaribak.egg-info
-__*
+__pycache__
+__notes.md
+.vscode/*
