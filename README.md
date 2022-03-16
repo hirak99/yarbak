@@ -35,12 +35,17 @@ Note: Care must be taken to use different backup directories for different sourc
 
 ### Example Usage
 
-Backup the home directory -
+Maintain backups of the home directory -
 
 ```bash
+# Set up the directory one time.
+mkdir -p /path/to/homdir_backups
+
+# Call this every time you want to backup, or put it in cron.
+# Past backups will be kept.
 yaribak \
   --source ~ \
-  --backup-path path/to/homedir_backups
+  --backup-path /path/to/homedir_backups
 ```
 
 The following structure will be generated in the backup directory (for this
