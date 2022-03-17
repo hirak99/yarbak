@@ -25,7 +25,6 @@ import subprocess
 
 from typing import List
 
-# TODO: Move the backups to a payload/ subdirectory (so we can add metadata later).
 # TODO: Instead of ValueError, print a legible error message.
 # TODO: Include option to omit backup if run within some period of last backup.
 # TODO: Add --exclude.
@@ -60,7 +59,7 @@ def _get_commands(source: str, target: str, max_to_keep: int) -> List[str]:
     # commands.append(
     #     f'rsync -aAXHv {latest}/ {new_backup}/ --link-dest={latest}')
 
-  commands.append(f'rsync -aAXHv --delete --progress {source}/ {new_backup}')
+  commands.append(f'rsync -aAXHv --delete --progress {source}/ {new_backup}/payload')
 
   if folders and max_to_keep >= 1:
     num_to_remove = len(folders) + 1 - max_to_keep

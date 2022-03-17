@@ -28,10 +28,10 @@ class TestYaribak(unittest.TestCase):
     source_dir = os.path.join(self.tmpdir, 'source')
     backup_dir = os.path.join(self.tmpdir, 'backups')
     os.mkdir(backup_dir)
-    cmds = yaribak._get_commands(source_dir, backup_dir)
+    cmds = yaribak._get_commands(source_dir, backup_dir, -1)
     self.assertEqual(cmds, [
         f'rsync -aAXHv --delete --progress {self.tmpdir}/source/ '
-        f'{self.tmpdir}/backups/_backup_20220314_235219'
+        f'{self.tmpdir}/backups/_backup_20220314_235219/payload'
     ])
 
   def test_nonempty_backupdir(self):
@@ -39,12 +39,12 @@ class TestYaribak(unittest.TestCase):
     backup_dir = os.path.join(self.tmpdir, 'backups')
     os.mkdir(backup_dir)
     os.mkdir(os.path.join(backup_dir, '_backup_20200101_120000'))
-    cmds = yaribak._get_commands(source_dir, backup_dir)
+    cmds = yaribak._get_commands(source_dir, backup_dir, -1)
     self.assertEqual(cmds, [
         f'cp -al {self.tmpdir}/backups/_backup_20200101_120000 '
         f'{self.tmpdir}/backups/_backup_20220314_235219',
         f'rsync -aAXHv --delete --progress {self.tmpdir}/source/ '
-        f'{self.tmpdir}/backups/_backup_20220314_235219'
+        f'{self.tmpdir}/backups/_backup_20220314_235219/payload'
     ])
 
   def setUp(self) -> None:
