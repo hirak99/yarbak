@@ -28,7 +28,7 @@ yaribak --help
 
 yaribak \
   --source /path/to/source \
-  --backup-path path/to/backups
+  --backup-path /path/to/backups
 ```
 
 Note: Care must be taken to use different backup directories for different source directories.
@@ -38,7 +38,7 @@ Note: Care must be taken to use different backup directories for different sourc
 Maintain backups of the home directory -
 
 ```bash
-# Set up the directory one time.
+# Create the backup directory.
 mkdir -p /path/to/homdir_backups
 
 # Call this every time you want to backup, or put it in cron.

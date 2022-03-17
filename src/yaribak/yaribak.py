@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Incremental backup creator
 
 Example run -
@@ -26,7 +25,7 @@ import subprocess
 
 from typing import List
 
-# TODO: Move the backups to a payload/ subdirectory (so we can add metadata laetr).
+# TODO: Move the backups to a payload/ subdirectory (so we can add metadata later).
 # TODO: Instead of ValueError, print a legible error message.
 # TODO: Include option to omit backup if run within some period of last backup.
 # TODO: Add --exclude.
@@ -43,7 +42,7 @@ def _absolute_path(path: str) -> str:
   return os.path.abspath(os.path.expanduser(os.path.expandvars(path)))
 
 
-def _get_commands(source: str, target: str) -> List[str]:
+def _get_commands(source: str, target: str, max_to_keep: int) -> List[str]:
   commands = []
   if not os.path.isdir(target):
     raise ValueError(f'{target!r} is not a valid directory')
@@ -60,7 +59,15 @@ def _get_commands(source: str, target: str) -> List[str]:
     # Rsync version, echoes the directories being copied.
     # commands.append(
     #     f'rsync -aAXHv {latest}/ {new_backup}/ --link-dest={latest}')
+
   commands.append(f'rsync -aAXHv --delete --progress {source}/ {new_backup}')
+
+  if folders and max_to_keep >= 1:
+    num_to_remove = len(folders) + 1 - max_to_keep
+    if num_to_remove > 0:
+      for folder in sorted(folders)[:num_to_remove]:
+        commands.append(f'rm -r {folder}')
+
   return commands
 
 
@@ -79,6 +86,11 @@ def main():
                       required=True,
                       help=('Destination path to backup to. '
                             'Backup directories will be created here.'))
+  parser.add_argument(
+      '--max-to-keep',
+      type=int,
+      default=-1,
+      help='How many backups to store. A value of 0 or less disables this.')
   parser.add_argument('--dry-run',
                       action='store_true',
                       help='Do not make any change.')
@@ -86,7 +98,9 @@ def main():
   source = _absolute_path(args.source)
   target = _absolute_path(args.backup_path)
   dry_run: bool = args.dry_run
-  commands = _get_commands(source, target)
+  max_to_keep: int = args.max_to_keep
+
+  commands = _get_commands(source, target, max_to_keep)
   for i, command in enumerate(commands):
     print(f'# Command {i + 1}:')
     print(command)
