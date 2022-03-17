@@ -27,7 +27,6 @@ from typing import List
 
 # TODO: Instead of ValueError, print a legible error message.
 # TODO: Include option to omit backup if run within some period of last backup.
-# TODO: Add --exclude.
 
 
 def _times_str() -> str:
@@ -41,7 +40,8 @@ def _absolute_path(path: str) -> str:
   return os.path.abspath(os.path.expanduser(os.path.expandvars(path)))
 
 
-def _get_commands(source: str, target: str, max_to_keep: int) -> List[str]:
+def _get_commands(source: str, target: str, max_to_keep: int,
+                  excludes: List[str]) -> List[str]:
   commands = []
   if not os.path.isdir(target):
     raise ValueError(f'{target!r} is not a valid directory')
@@ -59,7 +59,13 @@ def _get_commands(source: str, target: str, max_to_keep: int) -> List[str]:
     # commands.append(
     #     f'rsync -aAXHv {latest}/ {new_backup}/ --link-dest={latest}')
 
-  commands.append(f'rsync -aAXHv --delete --progress {source}/ {new_backup}/payload')
+  # List that will be joined to get the final command.
+  command_build = [
+      f'rsync -aAXHv {source}/ {new_backup}/payload', '--delete --progress --delete-excluded'
+  ]
+  for exclude in excludes:
+    command_build.append(f'--exclude={exclude}')
+  commands.append(' '.join(command_build))
 
   if folders and max_to_keep >= 1:
     num_to_remove = len(folders) + 1 - max_to_keep
@@ -93,13 +99,18 @@ def main():
   parser.add_argument('--dry-run',
                       action='store_true',
                       help='Do not make any change.')
+  # Creates a list of strings.
+  parser.add_argument('--exclude',
+                      action='append',
+                      help='Directories to exclude')
   args = parser.parse_args()
   source = _absolute_path(args.source)
   target = _absolute_path(args.backup_path)
   dry_run: bool = args.dry_run
   max_to_keep: int = args.max_to_keep
+  exclude: List[str] = args.exclude or []
 
-  commands = _get_commands(source, target, max_to_keep)
+  commands = _get_commands(source, target, max_to_keep, exclude)
   for i, command in enumerate(commands):
     print(f'# Command {i + 1}:')
     print(command)

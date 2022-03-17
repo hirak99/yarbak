@@ -28,7 +28,8 @@ yaribak --help
 
 yaribak \
   --source /path/to/source \
-  --backup-path /path/to/backups
+  --backup-path /path/to/backups \
+  [--exclude source_subdir1 --exclude source_subdir2 ... ]
 ```
 
 Note: Care must be taken to use different backup directories for different source directories.
@@ -45,7 +46,8 @@ mkdir -p /path/to/homdir_backups
 # Past backups will be kept.
 yaribak \
   --source ~ \
-  --backup-path /path/to/homedir_backups
+  --backup-path /path/to/homedir_backups \
+  --exclude .cache
 ```
 
 The following structure will be generated in the backup directory (for this
