@@ -30,6 +30,7 @@ class TestYaribak(unittest.TestCase):
     os.mkdir(backup_dir)
     cmds = yaribak._get_commands(source_dir, backup_dir, **self.default_args)
     self.assertEqual(cmds, [
+        f'mkdir {self.tmpdir}/backups/_backup_20220314_235219',
         f'rsync -aAXHv {self.tmpdir}/source/ '
         f'{self.tmpdir}/backups/_backup_20220314_235219/payload '
         '--delete --progress --delete-excluded'
@@ -40,6 +41,7 @@ class TestYaribak(unittest.TestCase):
     backup_dir = os.path.join(self.tmpdir, 'backups')
     os.mkdir(backup_dir)
     os.mkdir(os.path.join(backup_dir, '_backup_20200101_120000'))
+    os.mkdir(os.path.join(backup_dir, '_backup_20200101_120000/payload'))
     cmds = yaribak._get_commands(source_dir, backup_dir, **self.default_args)
     self.assertEqual(cmds, [
         f'cp -al {self.tmpdir}/backups/_backup_20200101_120000 '
@@ -58,6 +60,7 @@ class TestYaribak(unittest.TestCase):
                                  max_to_keep=-1,
                                  excludes=['x', 'y'])
     self.assertEqual(cmds, [
+        f'mkdir {self.tmpdir}/backups/_backup_20220314_235219',
         f'rsync -aAXHv {self.tmpdir}/source/ '
         f'{self.tmpdir}/backups/_backup_20220314_235219/payload '
         '--delete --progress --delete-excluded '

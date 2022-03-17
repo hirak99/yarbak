@@ -58,6 +58,8 @@ def _get_commands(source: str, target: str, max_to_keep: int,
     # Rsync version, echoes the directories being copied.
     # commands.append(
     #     f'rsync -aAXHv {latest}/ {new_backup}/ --link-dest={latest}')
+  else:
+    commands.append(f'mkdir {new_backup}')
 
   # List that will be joined to get the final command.
   command_build = [
