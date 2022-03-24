@@ -31,7 +31,7 @@ class TestYaribak(unittest.TestCase):
     cmds = yaribak._get_commands(source_dir, backup_dir, **self.default_args)
     self.assertEqual(cmds, [
         f'mkdir {self.tmpdir}/backups/_backup_20220314_235219',
-        f'rsync -aAXHv {self.tmpdir}/source/ '
+        f'rsync -aAXHSv {self.tmpdir}/source/ '
         f'{self.tmpdir}/backups/_backup_20220314_235219/payload '
         '--delete --progress --delete-excluded'
     ])
@@ -46,7 +46,7 @@ class TestYaribak(unittest.TestCase):
     self.assertEqual(cmds, [
         f'cp -al {self.tmpdir}/backups/_backup_20200101_120000 '
         f'{self.tmpdir}/backups/_backup_20220314_235219',
-        f'rsync -aAXHv {self.tmpdir}/source/ '
+        f'rsync -aAXHSv {self.tmpdir}/source/ '
         f'{self.tmpdir}/backups/_backup_20220314_235219/payload '
         '--delete --progress --delete-excluded'
     ])
@@ -61,7 +61,7 @@ class TestYaribak(unittest.TestCase):
                                  excludes=['x', 'y'])
     self.assertEqual(cmds, [
         f'mkdir {self.tmpdir}/backups/_backup_20220314_235219',
-        f'rsync -aAXHv {self.tmpdir}/source/ '
+        f'rsync -aAXHSv {self.tmpdir}/source/ '
         f'{self.tmpdir}/backups/_backup_20220314_235219/payload '
         '--delete --progress --delete-excluded '
         '--exclude=x --exclude=y'

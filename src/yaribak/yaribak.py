@@ -57,13 +57,13 @@ def _get_commands(source: str, target: str, max_to_keep: int,
     commands.append(f'cp -al {latest} {new_backup}')
     # Rsync version, echoes the directories being copied.
     # commands.append(
-    #     f'rsync -aAXHv {latest}/ {new_backup}/ --link-dest={latest}')
+    #     f'rsync -aAXHSv {latest}/ {new_backup}/ --link-dest={latest}')
   else:
     commands.append(f'mkdir {new_backup}')
 
   # List that will be joined to get the final command.
   command_build = [
-      f'rsync -aAXHv {source}/ {new_backup}/payload', '--delete --progress --delete-excluded'
+      f'rsync -aAXHSv {source}/ {new_backup}/payload', '--delete --progress --delete-excluded'
   ]
   for exclude in excludes:
     command_build.append(f'--exclude={exclude}')
