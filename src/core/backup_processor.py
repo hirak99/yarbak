@@ -21,8 +21,8 @@ from typing import Iterator, List
 
 from . import metadata
 
-# TODO: Instead of ValueError, print a legible error message.
 # TODO: Include option to omit backup if run within some period of last backup.
+# TODO: Implement safety by marking backup as .incomplete, and mv at the end.
 
 
 def _times_str() -> str:
