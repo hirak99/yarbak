@@ -35,25 +35,24 @@ class BackupProcessor:
   def __init__(self, dryrun: bool):
     self._dryrun = dryrun
 
-  def _execute_sh(self, command: str) -> str:
+  def _execute_sh(self, command: str) -> Iterator[str]:
     """Optionally executes, and returns the command back for logging."""
     if not self._dryrun:
+      print(f'Running {command}')
       subprocess.run(command.split(' '), check=True)
-    return command
+    yield command
 
-  def _create_metadata(self, directory: str, source: str) -> str:
+  def _create_metadata(self, directory: str, source: str) -> Iterator[str]:
     data = metadata.Metadata(source=source, epoch=int(time.time()))
     fname = os.path.join(directory, 'metadata.json')
     if not self._dryrun:
-      with open(fname) as f:
+      with open(fname, 'w') as f:
         f.write(data.asjson())
-    return f'Store metadata at {fname}'
+    yield f'Store metadata at {fname}'
 
-  def process(self, source: str, target: str, max_to_keep: int,
-              excludes: List[str]) -> Iterator[str]:
-    """Executes everything needed to complete backup, unless it is a dryrun.
-    Yields the commands executed in the form of strings.
-    """
+  def _process_iterator(self, source: str, target: str, max_to_keep: int,
+                        excludes: List[str]) -> Iterator[str]:
+    """Creates an iterator of processes that need to be run for the backup."""
     if not os.path.isdir(target):
       raise ValueError(f'{target!r} is not a valid directory')
     prefix = os.path.join(target, '_backup_')
@@ -66,14 +65,14 @@ class BackupProcessor:
 
     if folders:
       latest = max(folders)
-      yield self._execute_sh(f'cp -al {latest} {new_backup}')
+      yield from self._execute_sh(f'cp -al {latest} {new_backup}')
       # Rsync version, echoes the directories being copied.
-      # yield self._execute(
+      # yield from self._execute(
       #     f'rsync -aAXHSv {latest}/ {new_backup}/ --link-dest={latest}'))
     else:
-      yield self._execute_sh(f'mkdir {new_backup}')
+      yield from self._execute_sh(f'mkdir {new_backup}')
 
-    yield self._create_metadata(directory=new_backup, source=source)
+    yield from self._create_metadata(directory=new_backup, source=source)
 
     # List that will be joined to get the final command.
     command_build = [
@@ -82,11 +81,17 @@ class BackupProcessor:
     ]
     for exclude in excludes:
       command_build.append(f'--exclude={exclude}')
-    yield self._execute_sh(' '.join(command_build))
+    yield from self._execute_sh(' '.join(command_build))
 
     if folders and max_to_keep >= 1:
       num_to_remove = len(folders) + 1 - max_to_keep
       if num_to_remove > 0:
         for folder in sorted(folders)[:num_to_remove]:
-          yield self._execute_sh(f'rm -r {folder}')
+          yield from self._execute_sh(f'rm -r {folder}')
 
+  def process(self, *args, **kwargs) -> None:
+    # Just runs through the iterator.
+    # Without this, the iterator will be created but processes
+    # may not be called.
+    for i, step in enumerate(self._process_iterator(*args, **kwargs)):
+      print(f'End of step #{i+1}. {step}')

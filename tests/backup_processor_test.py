@@ -17,7 +17,7 @@ import tempfile
 import unittest
 from unittest import mock
 
-from src.yaribak import backup_processor
+from src.core import backup_processor
 
 from typing import List
 
@@ -32,6 +32,8 @@ class TestBackupProcessor(unittest.TestCase):
     cmds = self._process(source_dir, backup_dir)
     self.assertEqual(list(cmds), [
         f'mkdir {self.tmpdir}/backups/_backup_20220314_235219',
+        'Store metadata at '
+        f'{self.tmpdir}/backups/_backup_20220314_235219/metadata.json',
         f'rsync -aAXHSv {self.tmpdir}/source/ '
         f'{self.tmpdir}/backups/_backup_20220314_235219/payload '
         '--delete --progress --delete-excluded'
@@ -76,7 +78,7 @@ class TestBackupProcessor(unittest.TestCase):
     processor = backup_processor.BackupProcessor(dryrun=True)
     kwargs = dict(max_to_keep=-1, excludes=[])
     kwargs.update(kwargs_in)
-    result = processor.process(*args, **kwargs)
+    result = processor._process_iterator(*args, **kwargs)
     return list(result)
 
   def setUp(self) -> None:

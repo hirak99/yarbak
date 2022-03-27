@@ -21,7 +21,8 @@ Example run -
 
 import argparse
 import os
-from . import backup_processor
+
+from core import backup_processor
 
 from typing import List
 
@@ -67,6 +68,8 @@ def main():
 
   if dryrun:
     print('Called with --dry-run, nothing was changed.')
+  else:
+    print('Done')
 
 
 if __name__ == '__main__':
