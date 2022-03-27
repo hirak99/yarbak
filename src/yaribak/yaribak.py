@@ -18,69 +18,18 @@ Example run -
     --source ~ \
     --backup-path /mnt/backup_drive/backup_home
 """
+
 import argparse
-import datetime
 import os
-import subprocess
+from . import backup_processor
 
-from typing import Iterator, List
-
-# TODO: Instead of ValueError, print a legible error message.
-# TODO: Include option to omit backup if run within some period of last backup.
-
-
-def _times_str() -> str:
-  now = datetime.datetime.now()
-  return now.strftime('%Y%m%d_%H%M%S')
+from typing import List
 
 
 def _absolute_path(path: str) -> str:
   # This is more powerful than pathlib.Path.absolute(),
   # since it also works on "../thisdirectory".
   return os.path.abspath(os.path.expanduser(os.path.expandvars(path)))
-
-
-def _process(source: str, target: str, max_to_keep: int, excludes: List[str],
-             dryrun: bool) -> Iterator[str]:
-  if not os.path.isdir(target):
-    raise ValueError(f'{target!r} is not a valid directory')
-  prefix = os.path.join(target, '_backup_')
-  folders = [
-      os.path.join(it.path)
-      for it in os.scandir(target)
-      if it.is_dir() and it.path.startswith(prefix)
-  ]
-  new_backup = os.path.join(target, prefix + _times_str())
-
-  def _execute(command: str) -> str:
-    """Optionally executes, and returns the command back."""
-    if not dryrun:
-      subprocess.run(command.split(' '), check=True)
-    return command
-
-  if folders:
-    latest = max(folders)
-    yield _execute(f'cp -al {latest} {new_backup}')
-    # Rsync version, echoes the directories being copied.
-    # commands.append(
-    #     f'rsync -aAXHSv {latest}/ {new_backup}/ --link-dest={latest}')
-  else:
-    yield _execute(f'mkdir {new_backup}')
-
-  # List that will be joined to get the final command.
-  command_build = [
-      f'rsync -aAXHSv {source}/ {new_backup}/payload',
-      '--delete --progress --delete-excluded'
-  ]
-  for exclude in excludes:
-    command_build.append(f'--exclude={exclude}')
-  yield _execute(' '.join(command_build))
-
-  if folders and max_to_keep >= 1:
-    num_to_remove = len(folders) + 1 - max_to_keep
-    if num_to_remove > 0:
-      for folder in sorted(folders)[:num_to_remove]:
-        yield _execute(f'rm -r {folder}')
 
 
 def main():
@@ -113,7 +62,8 @@ def main():
   max_to_keep: int = args.max_to_keep
   exclude: List[str] = args.exclude or []
 
-  _process(source, target, max_to_keep, exclude, dryrun)
+  processor = backup_processor.BackupProcessor(dryrun)
+  processor.process(source, target, max_to_keep, exclude)
 
   if dryrun:
     print('Called with --dry-run, nothing was changed.')

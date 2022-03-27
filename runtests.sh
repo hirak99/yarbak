@@ -14,4 +14,4 @@
 # limitations under the License.
 
 set -uexo pipefail
-python3 -m unittest tests/yaribak_test.py
+python3 -m unittest tests/*_test.py
