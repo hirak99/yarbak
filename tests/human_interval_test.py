@@ -12,25 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import unittest
 
-from src.core import metadata
-
-from typing import List
+from src.core import human_interval
 
 
-class TestMetadata(unittest.TestCase):
+class TestHumanInterval(unittest.TestCase):
 
-  def test_json(self):
-    data = metadata.Metadata(source='/path/to/source', epoch=1234)
-
-    json_str = data.asjson()
-    json_obj = json.loads(json_str)
-    self.assertEqual(json_obj, {
-        'source': '/path/to/source',
-        'epoch': 1234
-    })
-
-    data2 = metadata.Metadata.fromjson(json_str)
-    self.assertEqual(data, data2)
+  def test_cases(self):
+    cases = [
+        ('2hr', 7200),
+        ('2 hr', 7200),
+        ('2 hrs', 7200),
+        ('2 hour', 7200),
+        ('2 hours', 7200),
+        ('2 Hours', 7200),
+        ('2 h', None),
+    ]
+    for input, expected in cases:
+      self.assertEqual(human_interval.parse_to_secs(input), expected,
+                       f'{input} --> {expected!r}')
