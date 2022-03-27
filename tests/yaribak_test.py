@@ -28,8 +28,8 @@ class TestYaribak(unittest.TestCase):
     source_dir = os.path.join(self.tmpdir, 'source')
     backup_dir = os.path.join(self.tmpdir, 'backups')
     os.mkdir(backup_dir)
-    cmds = yaribak._get_commands(source_dir, backup_dir, **self.default_args)
-    self.assertEqual(cmds, [
+    cmds = yaribak._process(source_dir, backup_dir, **self.default_args)
+    self.assertEqual(list(cmds), [
         f'mkdir {self.tmpdir}/backups/_backup_20220314_235219',
         f'rsync -aAXHSv {self.tmpdir}/source/ '
         f'{self.tmpdir}/backups/_backup_20220314_235219/payload '
@@ -42,8 +42,8 @@ class TestYaribak(unittest.TestCase):
     os.mkdir(backup_dir)
     os.mkdir(os.path.join(backup_dir, '_backup_20200101_120000'))
     os.mkdir(os.path.join(backup_dir, '_backup_20200101_120000/payload'))
-    cmds = yaribak._get_commands(source_dir, backup_dir, **self.default_args)
-    self.assertEqual(cmds, [
+    cmds = yaribak._process(source_dir, backup_dir, **self.default_args)
+    self.assertEqual(list(cmds), [
         f'cp -al {self.tmpdir}/backups/_backup_20200101_120000 '
         f'{self.tmpdir}/backups/_backup_20220314_235219',
         f'rsync -aAXHSv {self.tmpdir}/source/ '
@@ -55,11 +55,12 @@ class TestYaribak(unittest.TestCase):
     source_dir = os.path.join(self.tmpdir, 'source')
     backup_dir = os.path.join(self.tmpdir, 'backups')
     os.mkdir(backup_dir)
-    cmds = yaribak._get_commands(source_dir,
-                                 backup_dir,
-                                 max_to_keep=-1,
-                                 excludes=['x', 'y'])
-    self.assertEqual(cmds, [
+    cmds = yaribak._process(source_dir,
+                            backup_dir,
+                            max_to_keep=-1,
+                            excludes=['x', 'y'],
+                            dryrun=True)
+    self.assertEqual(list(cmds), [
         f'mkdir {self.tmpdir}/backups/_backup_20220314_235219',
         f'rsync -aAXHSv {self.tmpdir}/source/ '
         f'{self.tmpdir}/backups/_backup_20220314_235219/payload '
@@ -71,7 +72,7 @@ class TestYaribak(unittest.TestCase):
     self.tmpdir_obj = tempfile.TemporaryDirectory(prefix='yaribak_test_')
     self.tmpdir = self.tmpdir_obj.name
     self.patches = []
-    self.default_args = dict(max_to_keep=-1, excludes=[])
+    self.default_args = dict(max_to_keep=-1, excludes=[], dryrun=True)
     self.patches.append(
         mock.patch.object(yaribak,
                           '_times_str',
