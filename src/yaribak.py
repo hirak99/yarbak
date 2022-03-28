@@ -49,6 +49,9 @@ def main():
       type=int,
       default=-1,
       help='How many backups to store. A value of 0 or less disables this.')
+  parser.add_argument('--verbose',
+                      action='store_true',
+                      help='Passes -v to rsync.')
   parser.add_argument('--dry-run',
                       action='store_true',
                       help='Do not make any change.')
@@ -60,10 +63,11 @@ def main():
   source = _absolute_path(args.source)
   target = _absolute_path(args.backup_path)
   dryrun: bool = args.dry_run
+  verbose: bool = args.verbose
   max_to_keep: int = args.max_to_keep
   exclude: List[str] = args.exclude or []
 
-  processor = backup_processor.BackupProcessor(dryrun)
+  processor = backup_processor.BackupProcessor(dryrun=dryrun, verbose=verbose)
   processor.process(source, target, max_to_keep, exclude)
 
   if dryrun:

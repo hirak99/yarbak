@@ -21,6 +21,9 @@ from src.core import backup_processor
 
 from typing import List
 
+# Default expected rsync flags.
+_DEFAULT_RSYNC_FLAGS = '-aAXHSv --delete --delete-excluded'
+
 
 class TestBackupProcessor(unittest.TestCase):
   tmpdir: str
@@ -34,9 +37,8 @@ class TestBackupProcessor(unittest.TestCase):
         f'mkdir {self.tmpdir}/backups/_backup_20220314_235219',
         'Store metadata at '
         f'{self.tmpdir}/backups/_backup_20220314_235219/metadata.json',
-        f'rsync -aAXHSv {self.tmpdir}/source/ '
-        f'{self.tmpdir}/backups/_backup_20220314_235219/payload '
-        '--delete --progress --delete-excluded'
+        f'rsync {_DEFAULT_RSYNC_FLAGS} {self.tmpdir}/source/ '
+        f'{self.tmpdir}/backups/_backup_20220314_235219/payload'
     ])
 
   def test_nonempty_backupdir(self):
@@ -48,12 +50,10 @@ class TestBackupProcessor(unittest.TestCase):
     cmds = self._process(source_dir, backup_dir)
     self.assertEqual(list(cmds), [
         f'cp -al {self.tmpdir}/backups/_backup_20200101_120000 '
-        f'{self.tmpdir}/backups/_backup_20220314_235219',
-        'Store metadata at '
+        f'{self.tmpdir}/backups/_backup_20220314_235219', 'Store metadata at '
         f'{self.tmpdir}/backups/_backup_20220314_235219/metadata.json',
-        f'rsync -aAXHSv {self.tmpdir}/source/ '
-        f'{self.tmpdir}/backups/_backup_20220314_235219/payload '
-        '--delete --progress --delete-excluded'
+        f'rsync {_DEFAULT_RSYNC_FLAGS} {self.tmpdir}/source/ '
+        f'{self.tmpdir}/backups/_backup_20220314_235219/payload'
     ])
 
   def test_excludes(self):
@@ -68,14 +68,13 @@ class TestBackupProcessor(unittest.TestCase):
         f'mkdir {self.tmpdir}/backups/_backup_20220314_235219',
         'Store metadata at '
         f'{self.tmpdir}/backups/_backup_20220314_235219/metadata.json',
-        f'rsync -aAXHSv {self.tmpdir}/source/ '
-        f'{self.tmpdir}/backups/_backup_20220314_235219/payload '
-        '--delete --progress --delete-excluded '
-        '--exclude=x --exclude=y'
+        f'rsync {_DEFAULT_RSYNC_FLAGS} {self.tmpdir}/source/ '
+        f'{self.tmpdir}/backups/_backup_20220314_235219/payload'
+        ' --exclude=x --exclude=y'
     ])
 
   def _process(self, *args, **kwargs_in) -> List[str]:
-    processor = backup_processor.BackupProcessor(dryrun=True)
+    processor = backup_processor.BackupProcessor(dryrun=True, verbose=True)
     kwargs = dict(max_to_keep=-1, excludes=[])
     kwargs.update(kwargs_in)
     result = processor._process_iterator(*args, **kwargs)

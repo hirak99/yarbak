@@ -34,8 +34,10 @@ def _times_str() -> str:
 
 class BackupProcessor:
 
-  def __init__(self, dryrun: bool):
+  def __init__(self, dryrun: bool, verbose: bool):
     self._dryrun = dryrun
+    self._rsync_flags = '-aAXHSv' if verbose else '-aAXHS'
+    self._rsync_flags += ' --delete --delete-excluded'
 
   def _execute_sh(self, command: str) -> Iterator[str]:
     """Optionally executes, and returns the command back for logging."""
@@ -78,8 +80,8 @@ class BackupProcessor:
 
     # List that will be joined to get the final command.
     command_build = [
-        f'rsync -aAXHSv {source}/ {new_backup}/payload',
-        '--delete --progress --delete-excluded'
+        f'rsync {self._rsync_flags} '
+        f'{source}/ {new_backup}/payload'
     ]
     for exclude in excludes:
       command_build.append(f'--exclude={exclude}')
