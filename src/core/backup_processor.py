@@ -48,11 +48,11 @@ class BackupProcessor:
 
   def _create_metadata(self, directory: str, source: str) -> Iterator[str]:
     data = metadata.Metadata(source=source, epoch=int(time.time()))
-    fname = os.path.join(directory, 'metadata.json')
+    fname = os.path.join(directory, 'backup_context.json')
     if not self._dryrun:
       with open(fname, 'w') as f:
         f.write(data.asjson())
-    yield f'Store metadata at {fname}'
+    yield f'[Store metadata at {fname}]'
 
   def _process_iterator(self, source: str, target: str, max_to_keep: int,
                         excludes: List[str]) -> Iterator[str]:

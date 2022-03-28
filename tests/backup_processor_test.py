@@ -35,10 +35,10 @@ class TestBackupProcessor(unittest.TestCase):
     cmds = self._process(source_dir, backup_dir)
     self.assertEqual(list(cmds), [
         f'mkdir {self.tmpdir}/backups/_backup_20220314_235219',
-        'Store metadata at '
-        f'{self.tmpdir}/backups/_backup_20220314_235219/metadata.json',
+        '[Store metadata at '
+        f'{self.tmpdir}/backups/_backup_20220314_235219/backup_context.json]',
         f'rsync {_DEFAULT_RSYNC_FLAGS} {self.tmpdir}/source/ '
-        f'{self.tmpdir}/backups/_backup_20220314_235219/payload'
+        f'{self.tmpdir}/backups/_backup_20220314_235219/payload',
     ])
 
   def test_nonempty_backupdir(self):
@@ -50,10 +50,11 @@ class TestBackupProcessor(unittest.TestCase):
     cmds = self._process(source_dir, backup_dir)
     self.assertEqual(list(cmds), [
         f'cp -al {self.tmpdir}/backups/_backup_20200101_120000 '
-        f'{self.tmpdir}/backups/_backup_20220314_235219', 'Store metadata at '
-        f'{self.tmpdir}/backups/_backup_20220314_235219/metadata.json',
+        f'{self.tmpdir}/backups/_backup_20220314_235219',
+        '[Store metadata at '
+        f'{self.tmpdir}/backups/_backup_20220314_235219/backup_context.json]',
         f'rsync {_DEFAULT_RSYNC_FLAGS} {self.tmpdir}/source/ '
-        f'{self.tmpdir}/backups/_backup_20220314_235219/payload'
+        f'{self.tmpdir}/backups/_backup_20220314_235219/payload',
     ])
 
   def test_excludes(self):
@@ -66,11 +67,11 @@ class TestBackupProcessor(unittest.TestCase):
                          excludes=['x', 'y'])
     self.assertEqual(list(cmds), [
         f'mkdir {self.tmpdir}/backups/_backup_20220314_235219',
-        'Store metadata at '
-        f'{self.tmpdir}/backups/_backup_20220314_235219/metadata.json',
+        '[Store metadata at '
+        f'{self.tmpdir}/backups/_backup_20220314_235219/backup_context.json]',
         f'rsync {_DEFAULT_RSYNC_FLAGS} {self.tmpdir}/source/ '
         f'{self.tmpdir}/backups/_backup_20220314_235219/payload'
-        ' --exclude=x --exclude=y'
+        ' --exclude=x --exclude=y',
     ])
 
   def _process(self, *args, **kwargs_in) -> List[str]:
