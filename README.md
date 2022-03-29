@@ -47,6 +47,7 @@ mkdir -p /path/to/homdir_backups
 yaribak \
   --source ~ \
   --backup-path /path/to/homedir_backups \
+  --verbose \
   --exclude .cache
 ```
 
@@ -69,7 +70,7 @@ Any file that remains unchanged will be hard linked, effectively resulting in ve
 
 ```bash
 $ # Size of source directory.
-$ du -h ~ --max-depth=0
+$ du -sh ~
 6.5G /home/user1
 
 $ # Say following backups were created by multiple invocations -
@@ -94,11 +95,13 @@ From the package root, run -
 # Alternatives
 
 ## Comparison with Timeshift
-[Timeshift](https://github.com/teejee2008/timeshift) is an excellent utility to do one thing: backing up system.
+[Timeshift](https://github.com/teejee2008/timeshift) is an excellent utility to
+do one thing: backing up system.
 
 It however cannot be used to backup any other directory, or to back up in user-selected destination.
 
-This is an alternative to allow more control over the backup directory.
+This is an alternative to allow more control, but without conveniences like a
+GUI and out-of-the-box automated backups.
 
 # FAQ
 
