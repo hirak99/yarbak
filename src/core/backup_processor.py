@@ -14,6 +14,7 @@
 
 import datetime
 import os
+import pathlib
 import subprocess
 import time
 
@@ -74,6 +75,11 @@ class BackupProcessor:
       #     f'rsync -aAXHSv {latest}/ {new_backup}/ --link-dest={latest}'))
     else:
       yield from self._execute_sh(f'mkdir {new_backup}')
+      # While creating the first backup, ensure that owner is maintained.
+      # This is useful as backups may be often run as root.
+      source_path = pathlib.Path(source)
+      owner, group = source_path.owner(), source_path.group()
+      yield from self._execute_sh(f'chown {owner}:{group} {new_backup}')
 
     yield from self._create_metadata(directory=new_backup, source=source)
 
