@@ -23,7 +23,6 @@ from . import metadata
 
 # TODO: Include option to omit backup if run within some period of last backup.
 # TODO: Implement safety by marking backup as .incomplete, and mv at the end.
-# TODO: Add a functional test to guard first backup and second backup.
 # TODO: Enable marking TTL.
 
 
