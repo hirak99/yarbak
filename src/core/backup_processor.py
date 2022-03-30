@@ -22,6 +22,7 @@ import time
 from typing import Iterator, List, Optional
 
 from . import metadata
+from . import utils
 
 # TODO: Include option to omit backup if run within some period of last backup.
 # TODO: Implement safety by marking backup as .incomplete, and mv at the end.
@@ -30,23 +31,6 @@ from . import metadata
 def _times_str() -> str:
   now = datetime.datetime.now()
   return now.strftime('%Y%m%d_%H%M%S')
-
-
-def _is_hardlinked_contents(dir1: str, dir2: str) -> bool:
-  """Returns True if directories have same hard-linked files."""
-  for walk1, walk2 in zip(os.walk(dir1), os.walk(dir2)):
-    root1, dirs1, files1 = walk1
-    root2, dirs2, files2 = walk2
-    if files1 != files2:
-      return False
-    if dirs1 != dirs2:
-      return False
-    for file1, file2 in zip(files1, files2):
-      inode1 = os.lstat(os.path.join(root1, file1)).st_ino
-      inode2 = os.lstat(os.path.join(root2, file2)).st_ino
-      if inode1 != inode2:
-        return False
-  return True
 
 
 class BackupProcessor:
@@ -118,8 +102,8 @@ class BackupProcessor:
 
     # Check if there was no change.
     if not self._dryrun and self._only_if_changed and latest is not None:
-      no_change = _is_hardlinked_contents(os.path.join(latest, 'payload'),
-                                          new_backup_payload)
+      no_change = utils.is_hardlinked_replica(os.path.join(latest, 'payload'),
+                                              new_backup_payload)
       # If no_change, remove new backup and update old metadata.
       if no_change:
         logging.info('There was no change. Removing the new backup.')
