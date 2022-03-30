@@ -86,14 +86,14 @@ class TestBackupProcessor(unittest.TestCase):
         ' --exclude=x --exclude=y',
     ])
 
-  # Create and copy a directory structure.
+  # Run the functions on an actual directory structure.
   def test_functional(self):
     with open(os.path.join(self._source_dir, 'file1.txt'), 'w') as f:
       f.writelines(['hello 1'])
     with open(os.path.join(self._source_dir, 'file2.txt'), 'w') as f:
       f.writelines(['hello 2'])
 
-    processor = backup_processor.BackupProcessor(dryrun=False, verbose=False)
+    processor = backup_processor.BackupProcessor(dryrun=False, verbose=False, only_if_changed=True)
 
     # Run.
     processor.process(self._source_dir,
@@ -110,17 +110,27 @@ class TestBackupProcessor(unittest.TestCase):
       data = metadata.Metadata.fromjson(f.read())
     self.assertEqual(data.source, self._source_dir)
 
-    # Change file structure.
-    os.remove(os.path.join(self._source_dir, 'file2.txt'))
-    with open(os.path.join(self._source_dir, 'file3.txt'), 'w') as f:
-      f.writelines(['hello 3'])
-    # Run again, simulating a different time.
+    # Run again.
     self._fake_time_str = '20220320_000000'
     processor.process(self._source_dir,
                       self._backup_dir,
                       max_to_keep=5,
                       excludes=[])
+    # Expect no change (since only_if_changed=True).
     target_copy_dir = os.path.join(self._backup_dir, '_backup_20220320_000000')
+    self.assertFalse(os.path.isdir(target_copy_dir))
+
+    # Change file structure.
+    os.remove(os.path.join(self._source_dir, 'file2.txt'))
+    with open(os.path.join(self._source_dir, 'file3.txt'), 'w') as f:
+      f.writelines(['hello 3'])
+    # Run again, simulating a different time.
+    self._fake_time_str = '20220321_000000'
+    processor.process(self._source_dir,
+                      self._backup_dir,
+                      max_to_keep=5,
+                      excludes=[])
+    target_copy_dir = os.path.join(self._backup_dir, '_backup_20220321_000000')
     # Compare again.
     self.assertTrue(
         _dir_compare(self._source_dir, os.path.join(target_copy_dir,

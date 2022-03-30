@@ -20,6 +20,7 @@ Example run -
 """
 
 import argparse
+import logging
 import os
 
 from core import backup_processor
@@ -34,6 +35,8 @@ def _absolute_path(path: str) -> str:
 
 
 def main():
+  logging.basicConfig(level=logging.INFO)
+
   parser = argparse.ArgumentParser('yaribak')
   parser.add_argument('--source',
                       type=str,
@@ -77,9 +80,9 @@ def main():
   processor.process(source, target, max_to_keep, exclude)
 
   if dryrun:
-    print('Called with --dry-run, nothing was changed.')
+    logging.info('Called with --dry-run, nothing was changed.')
   else:
-    print('Done')
+    logging.info('Done')
 
 
 if __name__ == '__main__':

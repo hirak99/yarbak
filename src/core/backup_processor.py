@@ -32,7 +32,7 @@ def _times_str() -> str:
   return now.strftime('%Y%m%d_%H%M%S')
 
 
-def _is_hardlinked_content(dir1: str, dir2: str) -> bool:
+def _is_hardlinked_contents(dir1: str, dir2: str) -> bool:
   """Returns True if directories have same hard-linked files."""
   for walk1, walk2 in zip(os.walk(dir1), os.walk(dir2)):
     root1, dirs1, files1 = walk1
@@ -63,7 +63,7 @@ class BackupProcessor:
   def _execute_sh(self, command: str) -> Iterator[str]:
     """Optionally executes, and returns the command back for logging."""
     if not self._dryrun:
-      print(f'Running {command}')
+      logging.info(f'Running {command}')
       subprocess.run(command.split(' '), check=True)
     yield command
 
@@ -118,10 +118,11 @@ class BackupProcessor:
 
     # Check if there was no change.
     if not self._dryrun and self._only_if_changed and latest is not None:
-      no_change = _is_hardlinked_content(os.path.join(latest, 'payload'),
-                                         new_backup_payload)
+      no_change = _is_hardlinked_contents(os.path.join(latest, 'payload'),
+                                          new_backup_payload)
+      # If no_change, remove new backup and update old metadata.
       if no_change:
-        print('There was no change. Removing the new backup.')
+        logging.info('There was no change. Removing the new backup.')
         yield from self._execute_sh(f'rm -r {new_backup}')
         # Update the metadata.
         meta_fname = os.path.join(latest, 'backup_context.json')
@@ -143,4 +144,4 @@ class BackupProcessor:
     # Without this, the iterator will be created but processes
     # may not be called.
     for i, step in enumerate(self._process_iterator(*args, **kwargs)):
-      print(f'End of step #{i+1}. {step}')
+      logging.info(f'End of step #{i+1}. {step}')
