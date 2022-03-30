@@ -50,12 +50,11 @@ class TestBackupProcessor(unittest.TestCase):
   def test_empty_backupdir(self):
     cmds = self._process(self._source_dir, self._backup_dir)
     self.assertEqual(list(cmds), [
-        f'mkdir {self._tmpdir}/backups/_backup_20220314_235219',
-        f'chown {self._user_and_group} {self._tmpdir}/backups/_backup_20220314_235219',
-        '[Store metadata at '
-        f'{self._tmpdir}/backups/_backup_20220314_235219/backup_context.json]',
-        f'rsync {_EXPECTED_RSYNC_FLAGS} {self._tmpdir}/source/ '
-        f'{self._tmpdir}/backups/_backup_20220314_235219/payload',
+        f'mkdir {self._tmpdir}/backups/_backup__incomplete',
+        f'chown {self._user_and_group} {self._tmpdir}/backups/_backup__incomplete',
+        f'[Store metadata at {self._tmpdir}/backups/_backup__incomplete/backup_context.json]',
+        f'rsync {_EXPECTED_RSYNC_FLAGS} {self._tmpdir}/source/ {self._tmpdir}/backups/_backup__incomplete/payload',
+        f'[Rename {self._tmpdir}/backups/_backup__incomplete to {self._tmpdir}/backups/_backup_20220314_235219]',
     ])
 
   def test_nonempty_backupdir(self):
@@ -63,12 +62,10 @@ class TestBackupProcessor(unittest.TestCase):
     os.mkdir(os.path.join(self._backup_dir, '_backup_20200101_120000/payload'))
     cmds = self._process(self._source_dir, self._backup_dir)
     self.assertEqual(list(cmds), [
-        f'cp -al {self._tmpdir}/backups/_backup_20200101_120000 '
-        f'{self._tmpdir}/backups/_backup_20220314_235219',
-        '[Store metadata at '
-        f'{self._tmpdir}/backups/_backup_20220314_235219/backup_context.json]',
-        f'rsync {_EXPECTED_RSYNC_FLAGS} {self._tmpdir}/source/ '
-        f'{self._tmpdir}/backups/_backup_20220314_235219/payload',
+        f'cp -al {self._tmpdir}/backups/_backup_20200101_120000 {self._tmpdir}/backups/_backup__incomplete',
+        f'[Store metadata at {self._tmpdir}/backups/_backup__incomplete/backup_context.json]',
+        f'rsync {_EXPECTED_RSYNC_FLAGS} {self._tmpdir}/source/ {self._tmpdir}/backups/_backup__incomplete/payload',
+        f'[Rename {self._tmpdir}/backups/_backup__incomplete to {self._tmpdir}/backups/_backup_20220314_235219]',
     ])
 
   def test_excludes(self):
@@ -77,13 +74,11 @@ class TestBackupProcessor(unittest.TestCase):
                          max_to_keep=-1,
                          excludes=['x', 'y'])
     self.assertEqual(list(cmds), [
-        f'mkdir {self._tmpdir}/backups/_backup_20220314_235219',
-        f'chown {self._user_and_group} {self._tmpdir}/backups/_backup_20220314_235219',
-        '[Store metadata at '
-        f'{self._tmpdir}/backups/_backup_20220314_235219/backup_context.json]',
-        f'rsync {_EXPECTED_RSYNC_FLAGS} {self._tmpdir}/source/ '
-        f'{self._tmpdir}/backups/_backup_20220314_235219/payload'
-        ' --exclude=x --exclude=y',
+        f'mkdir {self._tmpdir}/backups/_backup__incomplete',
+        f'chown {self._user_and_group} {self._tmpdir}/backups/_backup__incomplete',
+        f'[Store metadata at {self._tmpdir}/backups/_backup__incomplete/backup_context.json]',
+        f'rsync {_EXPECTED_RSYNC_FLAGS} {self._tmpdir}/source/ {self._tmpdir}/backups/_backup__incomplete/payload --exclude=x --exclude=y',
+        f'[Rename {self._tmpdir}/backups/_backup__incomplete to {self._tmpdir}/backups/_backup_20220314_235219]',
     ])
 
   # Run the functions on an actual directory structure.
@@ -93,7 +88,9 @@ class TestBackupProcessor(unittest.TestCase):
     with open(os.path.join(self._source_dir, 'file2.txt'), 'w') as f:
       f.writelines(['hello 2'])
 
-    processor = backup_processor.BackupProcessor(dryrun=False, verbose=False, only_if_changed=True)
+    processor = backup_processor.BackupProcessor(dryrun=False,
+                                                 verbose=False,
+                                                 only_if_changed=True)
 
     # Run.
     processor.process(self._source_dir,

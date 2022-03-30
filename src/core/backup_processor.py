@@ -16,6 +16,7 @@ import datetime
 import logging
 import os
 import pathlib
+import shutil
 import subprocess
 import time
 
@@ -25,7 +26,6 @@ from . import metadata
 from . import utils
 
 # TODO: Include option to omit backup if run within some period of last backup.
-# TODO: Implement safety by marking backup as .incomplete, and mv at the end.
 
 
 def _times_str() -> str:
@@ -64,12 +64,17 @@ class BackupProcessor:
     if not os.path.isdir(target):
       raise ValueError(f'{target!r} is not a valid directory')
     prefix = os.path.join(target, '_backup_')
+    # This is a temporary directory, to use in case backup is stopped in the middle.
+    new_backup = os.path.join(target, prefix + '_incomplete')
+    if not self._dryrun and os.path.exists(new_backup):
+      yield f'[Remove lingering {new_backup}]'
+      shutil.rmtree(new_backup)
+
     folders = [
         os.path.join(it.path)
         for it in os.scandir(target)
         if it.is_dir() and it.path.startswith(prefix)
     ]
-    new_backup = os.path.join(target, prefix + _times_str())
 
     # The directory with latest backup.
     latest: Optional[str] = None
@@ -115,6 +120,11 @@ class BackupProcessor:
         data.save_to(meta_fname)
         # Return early and do not remove older directories.
         return
+
+    final_directory = os.path.join(target, prefix + _times_str())
+    yield f'[Rename {new_backup} to {final_directory}]'
+    if not self._dryrun:
+      shutil.move(new_backup, final_directory)
 
     # Delete older backups.
     if folders and max_to_keep >= 1:
