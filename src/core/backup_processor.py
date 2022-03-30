@@ -13,18 +13,18 @@
 # limitations under the License.
 
 import datetime
+import logging
 import os
 import pathlib
 import subprocess
 import time
 
-from typing import Iterator, List
+from typing import Iterator, List, Optional
 
 from . import metadata
 
 # TODO: Include option to omit backup if run within some period of last backup.
 # TODO: Implement safety by marking backup as .incomplete, and mv at the end.
-# TODO: Enable marking TTL.
 
 
 def _times_str() -> str:
@@ -32,12 +32,33 @@ def _times_str() -> str:
   return now.strftime('%Y%m%d_%H%M%S')
 
 
+def _is_hardlinked_content(dir1: str, dir2: str) -> bool:
+  """Returns True if directories have same hard-linked files."""
+  for walk1, walk2 in zip(os.walk(dir1), os.walk(dir2)):
+    root1, dirs1, files1 = walk1
+    root2, dirs2, files2 = walk2
+    if files1 != files2:
+      return False
+    if dirs1 != dirs2:
+      return False
+    for file1, file2 in zip(files1, files2):
+      inode1 = os.lstat(os.path.join(root1, file1)).st_ino
+      inode2 = os.lstat(os.path.join(root2, file2)).st_ino
+      if inode1 != inode2:
+        return False
+  return True
+
+
 class BackupProcessor:
 
-  def __init__(self, dryrun: bool, verbose: bool):
+  def __init__(self,
+               dryrun: bool,
+               verbose: bool,
+               only_if_changed: bool = False):
     self._dryrun = dryrun
     self._rsync_flags = '-aAXHSv' if verbose else '-aAXHS'
     self._rsync_flags += ' --delete --delete-excluded'
+    self._only_if_changed = only_if_changed
 
   def _execute_sh(self, command: str) -> Iterator[str]:
     """Optionally executes, and returns the command back for logging."""
@@ -50,8 +71,7 @@ class BackupProcessor:
     data = metadata.Metadata(source=source, epoch=int(time.time()))
     fname = os.path.join(directory, 'backup_context.json')
     if not self._dryrun:
-      with open(fname, 'w') as f:
-        f.write(data.asjson())
+      data.save_to(fname)
     yield f'[Store metadata at {fname}]'
 
   def _process_iterator(self, source: str, target: str, max_to_keep: int,
@@ -67,6 +87,8 @@ class BackupProcessor:
     ]
     new_backup = os.path.join(target, prefix + _times_str())
 
+    # The directory with latest backup.
+    latest: Optional[str] = None
     if folders:
       latest = max(folders)
       yield from self._execute_sh(f'cp -al {latest} {new_backup}')
@@ -84,14 +106,32 @@ class BackupProcessor:
     yield from self._create_metadata(directory=new_backup, source=source)
 
     # List that will be joined to get the final command.
+    new_backup_payload = os.path.join(new_backup, 'payload')
     command_build = [
-        f'rsync {self._rsync_flags} '
-        f'{source}/ {new_backup}/payload'
+        f'rsync {self._rsync_flags} {source}/ {new_backup_payload}'
     ]
     for exclude in excludes:
       command_build.append(f'--exclude={exclude}')
     yield from self._execute_sh(' '.join(command_build))
 
+    # Backup is done. Remaining steps are for cleaning up.
+
+    # Check if there was no change.
+    if not self._dryrun and self._only_if_changed and latest is not None:
+      no_change = _is_hardlinked_content(os.path.join(latest, 'payload'),
+                                         new_backup_payload)
+      if no_change:
+        print('There was no change. Removing the new backup.')
+        yield from self._execute_sh(f'rm -r {new_backup}')
+        # Update the metadata.
+        meta_fname = os.path.join(latest, 'backup_context.json')
+        data = metadata.Metadata.load_from(meta_fname)
+        data.updated_epoch = int(time.time())
+        data.save_to(meta_fname)
+        # Return early and do not remove older directories.
+        return
+
+    # Delete older backups.
     if folders and max_to_keep >= 1:
       num_to_remove = len(folders) + 1 - max_to_keep
       if num_to_remove > 0:

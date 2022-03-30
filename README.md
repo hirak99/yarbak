@@ -29,12 +29,14 @@ yaribak --help
 yaribak \
   --source /path/to/source \
   --backup-path /path/to/backups \
+  --only-if-changed \
+  --max-to-keep=3 \
   [--exclude source_subdir1 --exclude source_subdir2 ... ]
 ```
 
 Note: Care must be taken to use different backup directories for different source directories.
 
-### Example Usage
+## Example Usage
 
 Maintain backups of the home directory -
 
