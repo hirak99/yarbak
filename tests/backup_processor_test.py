@@ -50,22 +50,22 @@ class TestBackupProcessor(unittest.TestCase):
   def test_empty_backupdir(self):
     cmds = self._process(self._source_dir, self._backup_dir)
     self.assertEqual(list(cmds), [
-        f'mkdir {self._tmpdir}/backups/_backup__incomplete',
-        f'chown {self._user_and_group} {self._tmpdir}/backups/_backup__incomplete',
-        f'[Store metadata at {self._tmpdir}/backups/_backup__incomplete/backup_context.json]',
-        f'rsync {_EXPECTED_RSYNC_FLAGS} {self._tmpdir}/source/ {self._tmpdir}/backups/_backup__incomplete/payload',
-        f'[Rename {self._tmpdir}/backups/_backup__incomplete to {self._tmpdir}/backups/_backup_20220314_235219]',
+        f'mkdir {self._tmpdir}/backups/ysnap__incomplete',
+        f'chown {self._user_and_group} {self._tmpdir}/backups/ysnap__incomplete',
+        f'[Store metadata at {self._tmpdir}/backups/ysnap__incomplete/backup_context.json]',
+        f'rsync {_EXPECTED_RSYNC_FLAGS} {self._tmpdir}/source/ {self._tmpdir}/backups/ysnap__incomplete/payload',
+        f'[Rename {self._tmpdir}/backups/ysnap__incomplete to {self._tmpdir}/backups/ysnap_20220314_235219]',
     ])
 
   def test_nonempty_backupdir(self):
-    os.mkdir(os.path.join(self._backup_dir, '_backup_20200101_120000'))
-    os.mkdir(os.path.join(self._backup_dir, '_backup_20200101_120000/payload'))
+    os.mkdir(os.path.join(self._backup_dir, 'ysnap_20200101_120000'))
+    os.mkdir(os.path.join(self._backup_dir, 'ysnap_20200101_120000/payload'))
     cmds = self._process(self._source_dir, self._backup_dir)
     self.assertEqual(list(cmds), [
-        f'cp -al {self._tmpdir}/backups/_backup_20200101_120000 {self._tmpdir}/backups/_backup__incomplete',
-        f'[Store metadata at {self._tmpdir}/backups/_backup__incomplete/backup_context.json]',
-        f'rsync {_EXPECTED_RSYNC_FLAGS} {self._tmpdir}/source/ {self._tmpdir}/backups/_backup__incomplete/payload',
-        f'[Rename {self._tmpdir}/backups/_backup__incomplete to {self._tmpdir}/backups/_backup_20220314_235219]',
+        f'cp -al {self._tmpdir}/backups/ysnap_20200101_120000 {self._tmpdir}/backups/ysnap__incomplete',
+        f'[Store metadata at {self._tmpdir}/backups/ysnap__incomplete/backup_context.json]',
+        f'rsync {_EXPECTED_RSYNC_FLAGS} {self._tmpdir}/source/ {self._tmpdir}/backups/ysnap__incomplete/payload',
+        f'[Rename {self._tmpdir}/backups/ysnap__incomplete to {self._tmpdir}/backups/ysnap_20220314_235219]',
     ])
 
   def test_excludes(self):
@@ -74,11 +74,11 @@ class TestBackupProcessor(unittest.TestCase):
                          max_to_keep=-1,
                          excludes=['x', 'y'])
     self.assertEqual(list(cmds), [
-        f'mkdir {self._tmpdir}/backups/_backup__incomplete',
-        f'chown {self._user_and_group} {self._tmpdir}/backups/_backup__incomplete',
-        f'[Store metadata at {self._tmpdir}/backups/_backup__incomplete/backup_context.json]',
-        f'rsync {_EXPECTED_RSYNC_FLAGS} {self._tmpdir}/source/ {self._tmpdir}/backups/_backup__incomplete/payload --exclude=x --exclude=y',
-        f'[Rename {self._tmpdir}/backups/_backup__incomplete to {self._tmpdir}/backups/_backup_20220314_235219]',
+        f'mkdir {self._tmpdir}/backups/ysnap__incomplete',
+        f'chown {self._user_and_group} {self._tmpdir}/backups/ysnap__incomplete',
+        f'[Store metadata at {self._tmpdir}/backups/ysnap__incomplete/backup_context.json]',
+        f'rsync {_EXPECTED_RSYNC_FLAGS} {self._tmpdir}/source/ {self._tmpdir}/backups/ysnap__incomplete/payload --exclude=x --exclude=y',
+        f'[Rename {self._tmpdir}/backups/ysnap__incomplete to {self._tmpdir}/backups/ysnap_20220314_235219]',
     ])
 
   # Run the functions on an actual directory structure.
@@ -98,7 +98,7 @@ class TestBackupProcessor(unittest.TestCase):
                       max_to_keep=5,
                       excludes=[])
     # Compare.
-    target_copy_dir = os.path.join(self._backup_dir, '_backup_20220314_235219')
+    target_copy_dir = os.path.join(self._backup_dir, 'ysnap_20220314_235219')
     self.assertTrue(
         _dir_compare(self._source_dir, os.path.join(target_copy_dir,
                                                     'payload')))
@@ -114,7 +114,7 @@ class TestBackupProcessor(unittest.TestCase):
                       max_to_keep=5,
                       excludes=[])
     # Expect no change (since only_if_changed=True).
-    target_copy_dir = os.path.join(self._backup_dir, '_backup_20220320_000000')
+    target_copy_dir = os.path.join(self._backup_dir, 'ysnap_20220320_000000')
     self.assertFalse(os.path.isdir(target_copy_dir))
 
     # Change file structure.
@@ -127,7 +127,7 @@ class TestBackupProcessor(unittest.TestCase):
                       self._backup_dir,
                       max_to_keep=5,
                       excludes=[])
-    target_copy_dir = os.path.join(self._backup_dir, '_backup_20220321_000000')
+    target_copy_dir = os.path.join(self._backup_dir, 'ysnap_20220321_000000')
     # Compare again.
     self.assertTrue(
         _dir_compare(self._source_dir, os.path.join(target_copy_dir,

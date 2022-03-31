@@ -27,6 +27,8 @@ from . import utils
 
 # TODO: Include option to omit backup if run within some period of last backup.
 
+_SNAPSHOT_DIR_PREFIX = 'ysnap_'
+
 
 def _times_str() -> str:
   now = datetime.datetime.now()
@@ -63,7 +65,7 @@ class BackupProcessor:
     """Creates an iterator of processes that need to be run for the backup."""
     if not os.path.isdir(target):
       raise ValueError(f'{target!r} is not a valid directory')
-    prefix = os.path.join(target, '_backup_')
+    prefix = os.path.join(target, _SNAPSHOT_DIR_PREFIX)
     # This is a temporary directory, to use in case backup is stopped in the middle.
     new_backup = os.path.join(target, prefix + '_incomplete')
     if not self._dryrun and os.path.exists(new_backup):
