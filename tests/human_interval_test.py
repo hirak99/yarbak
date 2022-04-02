@@ -14,7 +14,7 @@
 
 import unittest
 
-from src.core import human_interval
+from src.yaribak import human_interval
 
 
 class TestHumanInterval(unittest.TestCase):

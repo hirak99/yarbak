@@ -18,7 +18,7 @@ import os
 import shutil
 import tempfile
 
-from src.core import utils
+from src.yaribak import utils
 
 
 class TestUtils(unittest.TestCase):

@@ -19,8 +19,8 @@ import tempfile
 import unittest
 from unittest import mock
 
-from src.core import backup_processor
-from src.core import metadata
+from src.yaribak import backup_processor
+from src.yaribak import metadata
 
 from typing import List
 

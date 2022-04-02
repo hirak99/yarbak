@@ -15,7 +15,7 @@
 import json
 import unittest
 
-from src.core import metadata
+from src.yaribak import metadata
 
 
 class TestMetadata(unittest.TestCase):

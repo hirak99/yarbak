@@ -23,7 +23,7 @@ import argparse
 import logging
 import os
 
-from core import backup_processor
+from . import backup_processor
 
 from typing import List
 
