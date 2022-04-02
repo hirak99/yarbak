@@ -22,24 +22,44 @@ mkdir -p /path/to/abc_backups
 yaribak /path/to/abc /path/to/abc_backups
 ```
 
-# Setup and Usage
+# Setup and Invocation
 
-## Installing
+## Option 1: pip
 
-Run the following -
+This is the recommend way to install for general purpose usage.
 
 ```bash
+# Installation.
 sudo pip3 install yaribak
+
+# Invocation.
+yaribak --help
 ```
 
 You can leave out the `sudo` in most distributions, or if you don't want to
 backup with super-user privileges.
 
-## Usage
+## Option 2: git clone
+
+Cloning the git repo is necessary for development.
+
+It can also be used as an alternative means to quickly test the functionality,
+without installing it on the system with `pip install`.
 
 ```bash
-yaribak --help
+# Clone repository.
+mkdir -p /path/to/git
+git clone https://github.com/hirak99/yaribak
 
+# Invocation.
+/path/to/git/yaribak.sh --help
+```
+
+# Usage
+
+## Common Invocation and Arguments
+
+```bash
 yaribak \
   --source /path/to/source \
   --backup-path /path/to/backups
