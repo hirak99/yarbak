@@ -17,8 +17,6 @@ import unittest
 
 from src.core import metadata
 
-from typing import List
-
 
 class TestMetadata(unittest.TestCase):
 

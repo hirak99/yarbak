@@ -14,4 +14,5 @@
 # limitations under the License.
 
 set -uexo pipefail
+flake8 --ignore=E111,E114,E266,E501 src/ tests/
 python3 -m unittest tests/*_test.py

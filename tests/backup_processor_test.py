@@ -22,7 +22,7 @@ from unittest import mock
 from src.core import backup_processor
 from src.core import metadata
 
-from typing import List, Optional
+from typing import List
 
 # Default expected rsync flags.
 _EXPECTED_RSYNC_FLAGS = '-aAXHSv --delete --delete-excluded'
