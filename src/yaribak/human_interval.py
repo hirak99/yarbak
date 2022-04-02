@@ -12,33 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Basic parser for human intervals.
-E.g. parse_to_secs('10 hrs')  # Returns 36000.
+Matches convention established in `man systemd.time`.
+E.g. parse_to_secs('10 hr')  # Returns 36000.
 """
 import re
 
 from typing import Optional
 
-# String unit to seconds.
-# Omit 's' at the end for plural, it is part of the parsing.
-_MAPPINGS = {
-    'sec': 1,
-    'second': 1,
-    'min': 60,
-    'minute': 60,
-    'hr': 60 * 60,
-    'hour': 60 * 60,
-    'day': 24 * 60 * 60,
-    'week': 7 * 24 * 60 * 60,
-    'mon': 30 * 24 * 60 * 60,
-    'month': 30 * 24 * 60 * 60,
-    'year': 365 * 24 * 60 * 60,
+# String units to seconds.
+# Matches convention given in `man systemd.time`.
+_MAPPINGS_SYNONYMS = {
+    ('usec', 'us', 'µs'): 1e-6,
+    ('msec', 'ms'): 1e-3,
+    ('seconds', 'second', 'sec', 's'): 1,
+    ('minutes', 'minute', 'min', 'm'): 60,
+    ('hours', 'hour', 'hr', 'h'): 60 * 60,
+    ('days', 'day', 'd'): 24 * 60 * 60,
+    ('weeks', 'week', 'w'): 7 * 24 * 60 * 60,
+    ('months', 'month', 'M'): 30.44 * 24 * 60 * 60,
+    ('years', 'year', 'y'): 365.24 * 24 * 60 * 60,
 }
 
+# Unroll the tuples from _MAPPINGS_SYSTEMD.
+_MAPPINGS = {k: v for (t, v) in _MAPPINGS_SYNONYMS.items() for k in t}
 
-def parse_to_secs(human_interval: str) -> Optional[int]:
+
+def parse_to_secs(human_interval: str) -> Optional[float]:
   units = '|'.join(sorted(_MAPPINGS))
-  m = re.match(rf'^(?P<value>[0-9]*\.?[0-9]*)\s*(?P<unit>{units})s?$',
-               human_interval.lower())
+  m = re.match(rf'^\s*(?P<value>[0-9]*\.?[0-9]*)\s*(?P<unit>{units})\s*$',
+               human_interval)
   if not m:
     return None
-  return int(m.group('value')) * _MAPPINGS[m.group('unit')]
+  return float(m.group('value')) * _MAPPINGS[m.group('unit')]

@@ -22,13 +22,25 @@ class TestHumanInterval(unittest.TestCase):
   def test_cases(self):
     cases = [
         ('2hr', 7200),
-        ('2 hr', 7200),
-        ('2 hrs', 7200),
+        ('2 h', 7200),
         ('2 hour', 7200),
-        ('2 hours', 7200),
-        ('2 Hours', 7200),
-        ('2 h', None),
+        ('2  hours', 7200),
+        ('.02 h', 72),
+        ('2.02 h', 7272),
+        ('  2.02  h  ', 7272),
+        ('2.2 h x', None),
+        ('2 m', 120),
+        ('2 M', 5260032),
+        ('2 ms', 2e-3),
+        ('2 fortenites', None),
+        ('2 Ms', None),
     ]
     for input, expected in cases:
-      self.assertEqual(human_interval.parse_to_secs(input), expected,
-                       f'{input} --> {expected!r}')
+      observed = human_interval.parse_to_secs(input)
+      if observed is None:
+        self.assertIsNone(expected, msg=f'{input} --> {expected!r}')
+      else:
+        assert expected is not None
+        self.assertAlmostEqual(observed,
+                               expected,
+                               msg=f'{input} --> {expected!r}')
