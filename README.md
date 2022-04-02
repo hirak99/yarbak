@@ -28,10 +28,14 @@ yaribak --help
 
 yaribak \
   --source /path/to/source \
-  --backup-path /path/to/backups \
-  --only-if-changed \
-  --max-to-keep=3 \
-  [--exclude source_subdir1 --exclude source_subdir2 ... ]
+  --backup-path /path/to/backups
+
+# Optional args (run with --help to view description) -
+# --dryrun
+# --verbose
+# --only-if-changed
+# --max-to-keep=3
+# --exclude source_subdir1 --exclude source_subdir2 ...
 ```
 
 Note: Care must be taken to use different backup directories for different source directories.
@@ -64,7 +68,9 @@ _backup_20220314_110741
 
 Each directory will have a full copy of the source.
 
-## This conserves space with hard links
+# Yaribak features
+
+## Conserving Space
 
 The primary reason to use this over a simple `cp -r` is that it saves space.
 
@@ -86,6 +92,11 @@ $ # total size of backup will not increase (by much).
 $ du -h /path/to/homedir_backups
 6.5G /path/to/homedir_backups
 ```
+
+## Fault Tolerance
+
+If a backup is stopped abruptly in the middle, yaribak will recover next time
+you run it.
 
 # Testing
 
@@ -133,13 +144,13 @@ This can be done either by `cp -ar` -
 mv /path/to/source /path/to/source_old
 
 # Restore.
-cp -ar /path/to/backups/_backup_20220314_110903 /path/to/source
+cp -ar /path/to/backups/ysnap_20220314_110903/payload /path/to/source
 ```
 
 Or using `rsync` -
 ```bash
 # Warning: Existing files will be irrevokably modified or deleted.
 rsync -aAXHv --delete \
-  /path/to/backups/_backup_20220314_110903 \
+  /path/to/backups/ysnap_20220314_110903/payload \
   /path/to/source
 ```
