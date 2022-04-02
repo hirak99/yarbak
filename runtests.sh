@@ -15,4 +15,6 @@
 
 set -uexo pipefail
 flake8 --ignore=E111,E114,E266,E501 src/ tests/
+mypy --ignore-missing-imports --show-column-numbers --check-untyped-defs --show-error-codes src/ tests/
 python3 -m unittest tests/*_test.py
+
