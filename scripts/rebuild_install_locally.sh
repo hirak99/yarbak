@@ -13,11 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This is an entry point to invok yaribak after cloning from git.
-# This is not used by pip.
-
-set -ueo pipefail
+# Script to build and install with pip locally.
+set -uexo pipefail
 
 readonly MY_PATH=$(cd $(dirname "$0") && pwd)
 
-PYTHONPATH=${MY_PATH}/src python3 -m yaribak.main $@
+pushd $MY_PATH/..
+trap "popd" EXIT
+
+rm -f dist/*
+python3 -m build
+
+pip install dist/$(ls dist | grep whl) --force-reinstall
+
+if ! ./yaribak.sh --help | grep -q "usage: yaribak .* \-\-source SOURCE"; then
+  echo ERROR: Expected output not found on running yaribak --help.
+  exit -1
+fi
+
+echo SUCCESS: Built and installed OK 👍

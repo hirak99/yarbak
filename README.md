@@ -32,26 +32,49 @@ This is the recommend way to install for general purpose usage.
 # Installation.
 sudo pip3 install yaribak
 
-# Invocation.
+# Invoke.
 yaribak --help
 ```
 
 You can leave out the `sudo` in most distributions, or if you don't want to
 backup with super-user privileges.
 
-## Option 2: git clone
+You may uninstall with `sudo pip uninstall yaribak`.
 
-Cloning the git repo is necessary for development.
+## Option 2: Install from git repo
 
-It can also be used as an alternative means to quickly test the functionality,
-without installing it on the system with `pip install`.
+This option builds and installs it locally from the repo.
 
 ```bash
 # Clone repository.
 mkdir -p /path/to/git
 git clone https://github.com/hirak99/yaribak
 
-# Invocation.
+# Install python build.
+python3 -m pip install --upgrade build
+
+# Install yaribak.
+/path/to/git/scripts/rebuild_install_locally.sh
+
+# Invoke.
+yaribak --help
+```
+
+After installation, you can `rm -r` the repo if you no longer need it.
+
+You may uninstall with `pip uninstall yaribak`.
+
+## Option 3: Run from git clone
+
+This is useful for development, or if you prefer to keep the repo and run it
+from there directly.
+
+```bash
+# Clone repository.
+mkdir -p /path/to/git
+git clone https://github.com/hirak99/yaribak
+
+# Invoke.
 /path/to/git/yaribak.sh --help
 ```
 
@@ -102,9 +125,9 @@ _backup_20220314_110741
 
 Each directory will have a full copy of the source.
 
-# Yaribak features
+# Features
 
-## Conserving Space
+## Conserves space across backups
 
 The primary reason to use this over a simple `cp -r` is that it saves space.
 
@@ -134,10 +157,21 @@ you run it.
 
 # Testing
 
+## Unit Tests
+
 From the package root, run -
 ```python
-./runtests.sh
+scripts/runtests.sh
 ```
+
+## Packaging Test
+
+```python
+scripts/rebuild_install_locally.sh
+```
+
+Note: This will also install it locally. Use `pip uninstall yaribak` if you do
+not need it.
 
 # Alternatives
 
