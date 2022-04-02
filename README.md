@@ -8,6 +8,20 @@ The backups in each directory will contain entire image, but the incremental
 nature comes from the fact that unchanged files will be hard linked sharing the
 same space across backups.
 
+# Quick Start
+
+```bash
+# Install.
+sudo pip3 install yaribak
+
+# Make a directory for backups.
+mkdir -p /path/to/abc_backups
+
+# Create a new backup in a subdir of destination.
+# If run again, will hard link unchanged files from previous backups.
+yaribak /path/to/abc /path/to/abc_backups
+```
+
 # Setup and Usage
 
 ## Installing
