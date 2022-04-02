@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import filecmp
-import getpass
 import os
+import pathlib
 import tempfile
 import unittest
 from unittest import mock
@@ -150,8 +150,9 @@ class TestBackupProcessor(unittest.TestCase):
     os.mkdir(self._backup_dir)
 
     # The current user.
-    username = getpass.getuser()
-    self._user_and_group = f'{username}:{username}'
+    source_path = pathlib.Path(self._source_dir)
+    owner, group = source_path.owner(), source_path.group()
+    self._user_and_group = f'{owner}:{group}'
     # This is used for all calls to backup_processor, e.g. self._process().
     # May be changed.
     self._fake_time_str = '20220314_235219'
