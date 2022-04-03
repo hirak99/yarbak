@@ -18,8 +18,13 @@ sudo pip3 install yaribak
 mkdir -p /path/to/abc_backups
 
 # Create a new backup in a subdir of destination.
-# If run again, will hard link unchanged files from previous backups.
 yaribak /path/to/abc /path/to/abc_backups
+
+# Now you can run the last line again to update the backup.
+# Each time you do that -
+# 1) Previous backups will be preserved.
+# 2) The new backup will be created in a subdirectory.
+# 3) Only changed files will take up space.
 ```
 
 # Setup and Invocation
@@ -117,10 +122,11 @@ yaribak \
 The following structure will be generated in the backup directory (for this
 example, after 3 calls) -
 ```
-$ ls path/to/homedir_backups
-_backup_20220306_232441
-_backup_20220312_080749
-_backup_20220314_110741
+$ tree /path/to/homedir_backups -L 1
+/path/to/homedir_backups
+├── ysnap_20220306_232441
+├── ysnap_20220312_080749
+└── ysnap_20220314_110741
 ```
 
 Each directory will have a full copy of the source.
@@ -139,10 +145,10 @@ $ du -sh ~
 6.5G /home/user1
 
 $ # Say following backups were created by multiple invocations -
-$ ls path/to/homedir_backups
-_backup_20220314_110741
-_backup_20220314_110815
-_backup_20220314_110903
+$ tree /path/to/homedir_backups -L 1
+├── ysnap_20220314_110741
+├── ysnap_20220314_110815
+└── ysnap_20220314_110903
 
 $ # Assuming multiple backups were created with no change in source,
 $ # total size of backup will not increase (by much).
