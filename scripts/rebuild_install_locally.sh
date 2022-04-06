@@ -24,7 +24,7 @@ trap "popd" EXIT
 rm -f dist/*
 python3 -m build
 
-pip install dist/$(ls dist | grep whl) --force-reinstall
+pip install dist/*.whl --force-reinstall
 
 if ! ./yaribak.sh --help | grep -q "usage: yaribak .* \-\-source SOURCE"; then
   echo ERROR: Expected output not found on running yaribak --help.

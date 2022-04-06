@@ -1,0 +1,34 @@
+# Maintainer: Arnab Bose <hirak99+arch@gmail.com>
+pkgname=yaribak-git
+pkgver=r53.dd4f4d0
+pkgrel=1
+pkgdesc="Yet Another Rsync-based Incremental Backup"
+arch=('any')
+url="https://github.com/hirak99/yaribak"
+license=('Apache')
+depends=('rsync' 'python>=3.8')
+makedepends=('python-build' 'python-installer' 'python-wheel')
+provides=('yaribak')
+source=($pkgname::git+https://github.com/hirak99/yaribak.git)
+md5sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+build() {
+  cd "$pkgname"
+  rm -f dist/*
+  python3 -m build --wheel --no-isolation
+}
+
+check() {
+  cd "$pkgname"
+  scripts/runtests.sh
+}
+
+package() {
+  cd "$pkgname"
+	python -m installer --destdir="$pkgdir" dist/*.whl
+}

@@ -1,0 +1,18 @@
+# Maintainer: Arnab Bose <hirak99+arch@gmail.com>
+pkgname=yaribak
+pkgver=0.0.5
+pkgrel=1
+pkgdesc="Yet Another Rsync-based Incremental Backup"
+arch=('any')
+url="https://github.com/hirak99/yaribak"
+license=('Apache')
+depends=('rsync' 'python>=3.8')
+makedepends=('python-installer')
+provides=('yaribak')
+_name=yaribak
+source=("https://files.pythonhosted.org/packages/py3/${_name::1}/$_name/${_name//-/_}-$pkgver-py3-none-any.whl")
+md5sums=('SKIP')
+
+package() {
+	python -m installer --destdir="$pkgdir" *.whl
+}
