@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 import filecmp
 import os
 import pathlib
@@ -57,17 +58,6 @@ class TestBackupProcessor(unittest.TestCase):
         f'[Rename {self._tmpdir}/backups/ysnap__incomplete to {self._tmpdir}/backups/ysnap_20220314_235219]',
     ])
 
-  def test_nonempty_backupdir(self):
-    os.mkdir(os.path.join(self._backup_dir, 'ysnap_20200101_120000'))
-    os.mkdir(os.path.join(self._backup_dir, 'ysnap_20200101_120000/payload'))
-    cmds = self._process(self._source_dir, self._backup_dir)
-    self.assertEqual(list(cmds), [
-        f'cp -al {self._tmpdir}/backups/ysnap_20200101_120000 {self._tmpdir}/backups/ysnap__incomplete',
-        f'[Store metadata at {self._tmpdir}/backups/ysnap__incomplete/backup_context.json]',
-        f'rsync {_EXPECTED_RSYNC_FLAGS} {self._tmpdir}/source/ {self._tmpdir}/backups/ysnap__incomplete/payload',
-        f'[Rename {self._tmpdir}/backups/ysnap__incomplete to {self._tmpdir}/backups/ysnap_20220314_235219]',
-    ])
-
   def test_excludes(self):
     cmds = self._process(self._source_dir,
                          self._backup_dir,
@@ -90,7 +80,8 @@ class TestBackupProcessor(unittest.TestCase):
 
     processor = backup_processor.BackupProcessor(dryrun=False,
                                                  verbose=False,
-                                                 only_if_changed=True)
+                                                 only_if_changed=True,
+                                                 minimum_delay_secs=60)
 
     # Run.
     processor.process(self._source_dir,
@@ -108,7 +99,7 @@ class TestBackupProcessor(unittest.TestCase):
     self.assertEqual(data.source, self._source_dir)
 
     # Run again.
-    self._fake_time_str = '20220320_000000'
+    self._fake_now = datetime.datetime(2022, 3, 20, 0, 0, 0)
     processor.process(self._source_dir,
                       self._backup_dir,
                       max_to_keep=5,
@@ -122,12 +113,16 @@ class TestBackupProcessor(unittest.TestCase):
     with open(os.path.join(self._source_dir, 'file3.txt'), 'w') as f:
       f.writelines(['hello 3'])
     # Run again, simulating a different time.
-    self._fake_time_str = '20220321_000000'
+    self._fake_now = datetime.datetime(2022, 3, 20, 0, 1, 0)
+    target_copy_dir = os.path.join(self._backup_dir, 'ysnap_20220321_000000')
+    # Expect no change (since minimum_delay_secs=60).
+    self.assertFalse(os.path.isdir(target_copy_dir))
+    # Run again, simulating a longer delay.
+    self._fake_now = datetime.datetime(2022, 3, 21, 0, 0, 0)
     processor.process(self._source_dir,
                       self._backup_dir,
                       max_to_keep=5,
                       excludes=[])
-    target_copy_dir = os.path.join(self._backup_dir, 'ysnap_20220321_000000')
     # Compare again.
     self.assertTrue(
         _dir_compare(self._source_dir, os.path.join(target_copy_dir,
@@ -155,13 +150,13 @@ class TestBackupProcessor(unittest.TestCase):
     self._user_and_group = f'{owner}:{group}'
     # This is used for all calls to backup_processor, e.g. self._process().
     # May be changed.
-    self._fake_time_str = '20220314_235219'
+    self._fake_now = datetime.datetime(2022, 3, 14, 23, 52, 19)
 
     self._patches = []
     self._patches.append(
         mock.patch.object(backup_processor,
-                          '_times_str',
-                          side_effect=lambda: self._fake_time_str))
+                          '_now',
+                          side_effect=lambda: self._fake_now))
     for p in self._patches:
       p.start()
     return super().setUp()

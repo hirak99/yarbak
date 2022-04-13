@@ -97,6 +97,7 @@ yaribak \
 # --verbose
 # --only-if-changed
 # --max-to-keep=3
+# --minimum-wait=2day
 # --exclude source_subdir1 --exclude source_subdir2 ...
 ```
 

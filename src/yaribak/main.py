@@ -24,6 +24,7 @@ import logging
 import os
 
 from . import backup_processor
+from . import human_interval
 
 from typing import List
 
@@ -47,6 +48,11 @@ def main():
                       required=True,
                       help=('Destination path to backup to. '
                             'Backup directories will be created here.'))
+  parser.add_argument('--minimum-wait',
+                      type=str,
+                      default='0s',
+                      help=('Minimum time before next backup'
+                            ' will be attempted. E.g. 2day'))
   parser.add_argument(
       '--max-to-keep',
       type=int,
@@ -76,7 +82,8 @@ def main():
 
   processor = backup_processor.BackupProcessor(dryrun=dryrun,
                                                verbose=verbose,
-                                               only_if_changed=only_if_changed)
+                                               only_if_changed=only_if_changed,
+                                               minimum_delay_secs=human_interval.parse_to_secs(args.minimum_wait))
   processor.process(source, target, max_to_keep, exclude)
 
   if dryrun:

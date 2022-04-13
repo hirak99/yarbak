@@ -26,6 +26,12 @@ class Metadata:
   # Present if the backup was updated when called with only-if-changed.
   updated_epoch: Optional[int] = None
 
+  def last_updated(self) -> int:
+    """Unlike updated_epoch, this is not None."""
+    if self.updated_epoch is not None:
+      return self.updated_epoch
+    return self.epoch
+
   def asjson(self) -> str:
     return json.dumps(dataclasses.asdict(self), indent=True, sort_keys=True)
 

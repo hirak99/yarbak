@@ -36,7 +36,10 @@ class TestHumanInterval(unittest.TestCase):
         ('2 Ms', None),
     ]
     for input, expected in cases:
-      observed = human_interval.parse_to_secs(input)
+      try:
+        observed = human_interval.parse_to_secs(input)
+      except ValueError:
+        observed = None
       if observed is None:
         self.assertIsNone(expected, msg=f'{input} --> {expected!r}')
       else:

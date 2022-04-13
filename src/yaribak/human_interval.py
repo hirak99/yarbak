@@ -17,8 +17,6 @@ E.g. parse_to_secs('10 hr')  # Returns 36000.
 """
 import re
 
-from typing import Optional
-
 # String units to seconds.
 # Matches convention given in `man systemd.time`.
 _MAPPINGS_SYNONYMS = {
@@ -37,10 +35,13 @@ _MAPPINGS_SYNONYMS = {
 _MAPPINGS = {k: v for (t, v) in _MAPPINGS_SYNONYMS.items() for k in t}
 
 
-def parse_to_secs(human_interval: str) -> Optional[float]:
+def parse_to_secs(human_interval: str) -> float:
   units = '|'.join(sorted(_MAPPINGS))
   m = re.match(rf'^\s*(?P<value>[0-9]*\.?[0-9]*)\s*(?P<unit>{units})\s*$',
                human_interval)
   if not m:
-    return None
+    known_suffixes = ','.join(sorted(_MAPPINGS))
+    raise ValueError(
+        f'Could not parse {human_interval} as a time interval. '
+        f'Expected <num><suffix> where <suffix> is one of {known_suffixes}.')
   return float(m.group('value')) * _MAPPINGS[m.group('unit')]

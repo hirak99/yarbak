@@ -13,12 +13,12 @@
 # limitations under the License.
 
 import datetime
+import functools
 import logging
 import os
 import pathlib
 import shutil
 import subprocess
-import time
 
 from typing import Iterator, List, Optional
 
@@ -29,10 +29,23 @@ from . import utils
 
 _SNAPSHOT_DIR_PREFIX = 'ysnap_'
 
+# Time in seconds to buffer for elapsed time computation.
+# A backup will trigger even if elapsed time is short by this much.
+_ELAPSED_TIME_BUFFER = 30.0
 
-def _times_str() -> str:
-  now = datetime.datetime.now()
-  return now.strftime('%Y%m%d_%H%M%S')
+
+# Useful for injection and testing.
+@functools.cache
+def _now() -> datetime.datetime:
+  return datetime.datetime.now()
+
+
+def _now_epoch() -> float:
+  return _now().timestamp()
+
+
+def _now_str() -> str:
+  return _now().strftime('%Y%m%d_%H%M%S')
 
 
 class BackupProcessor:
@@ -40,11 +53,13 @@ class BackupProcessor:
   def __init__(self,
                dryrun: bool,
                verbose: bool,
-               only_if_changed: bool = False):
+               only_if_changed: bool = False,
+               minimum_delay_secs: float = 0):
     self._dryrun = dryrun
     self._rsync_flags = '-aAXHSv' if verbose else '-aAXHS'
     self._rsync_flags += ' --delete --delete-excluded'
     self._only_if_changed = only_if_changed
+    self._minimum_delay_secs = minimum_delay_secs
 
   def _execute_sh(self, command: str) -> Iterator[str]:
     """Optionally executes, and returns the command back for logging."""
@@ -54,7 +69,9 @@ class BackupProcessor:
     yield command
 
   def _create_metadata(self, directory: str, source: str) -> Iterator[str]:
-    data = metadata.Metadata(source=source, epoch=int(time.time()))
+    data = metadata.Metadata(source=source,
+                             epoch=int(_now_epoch()),
+                             updated_epoch=int(_now_epoch()))
     fname = os.path.join(directory, 'backup_context.json')
     if not self._dryrun:
       data.save_to(fname)
@@ -80,8 +97,19 @@ class BackupProcessor:
 
     # The directory with latest backup.
     latest: Optional[str] = None
+    old_metadata: Optional[metadata.Metadata] = None
     if folders:
       latest = max(folders)
+      # Load and store old metadata.
+      meta_fname = os.path.join(latest, 'backup_context.json')
+      old_metadata = metadata.Metadata.load_from(meta_fname)
+
+      delay_since = _now_epoch() - old_metadata.last_updated() + _ELAPSED_TIME_BUFFER
+      if delay_since < self._minimum_delay_secs:
+        logging.info(f'Nothing to do since elapsed time {delay_since:0.2f} '
+                     f'is less than {self._minimum_delay_secs}.')
+        return
+
       yield from self._execute_sh(f'cp -al {latest} {new_backup}')
       # Rsync version, echoes the directories being copied.
       # yield from self._execute(
@@ -115,15 +143,14 @@ class BackupProcessor:
       if no_change:
         logging.info('There was no change. Removing the new backup.')
         yield from self._execute_sh(f'rm -r {new_backup}')
-        # Update the metadata.
-        meta_fname = os.path.join(latest, 'backup_context.json')
-        data = metadata.Metadata.load_from(meta_fname)
-        data.updated_epoch = int(time.time())
-        data.save_to(meta_fname)
+        # Update the $metadata.
+        assert old_metadata is not None
+        old_metadata.updated_epoch = int(_now_epoch())
+        old_metadata.save_to(meta_fname)
         # Return early and do not remove older directories.
         return
 
-    final_directory = os.path.join(target, prefix + _times_str())
+    final_directory = os.path.join(target, prefix + _now_str())
     yield f'[Rename {new_backup} to {final_directory}]'
     if not self._dryrun:
       shutil.move(new_backup, final_directory)
