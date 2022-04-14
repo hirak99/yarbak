@@ -35,7 +35,7 @@ _ELAPSED_TIME_BUFFER = 30.0
 
 
 # Useful for injection and testing.
-@functools.cache
+@functools.lru_cache(maxsize=None)
 def _now() -> datetime.datetime:
   return datetime.datetime.now()
 
