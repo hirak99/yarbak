@@ -14,4 +14,9 @@ Steps -
 * Check `pacman -Qip [packagefile]`
 
 To install -
-* Run `makepkg -si`
+* Run `pacman -U <pakcage.zst>`
+* Or, makepkg and and install with `makepkg -si`
+
+To clean up -
+* Have to use `git clean -f -d`
+
