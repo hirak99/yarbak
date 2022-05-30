@@ -53,10 +53,15 @@ class BackupProcessor:
   def __init__(self,
                dryrun: bool,
                verbose: bool,
-               only_if_changed: bool = False,
+               only_if_changed: bool,
+               low_ram: bool,
                minimum_delay_secs: float = 0):
     self._dryrun = dryrun
     self._rsync_flags = '-aAXHSv' if verbose else '-aAXHS'
+    if not low_ram:
+      # Forces collecting all hard links before running the backup.
+      # See https://lincolnloop.com/blog/detecting-file-moves-renames-rsync/
+      self._rsync_flags += ' --no-inc-recursive'
     self._rsync_flags += ' --delete --delete-excluded'
     self._only_if_changed = only_if_changed
     self._minimum_delay_secs = minimum_delay_secs

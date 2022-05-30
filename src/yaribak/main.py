@@ -61,6 +61,10 @@ def main():
   parser.add_argument('--only-if-changed',
                       action='store_true',
                       help='Do not keep the backup if there is no change.')
+  # This actually doesn't save much, ~150 bytes per file, or 15M for 100k files.
+  parser.add_argument('--low-ram',
+                      action='store_true',
+                      help='Lowers memory usage a little. Can miss hard links.')
   parser.add_argument('--verbose',
                       action='store_true',
                       help='Passes -v to rsync.')
@@ -75,15 +79,18 @@ def main():
   source = _absolute_path(args.source)
   target = _absolute_path(args.backup_path)
   only_if_changed: bool = args.only_if_changed
+  low_ram: bool = args.low_ram
   dryrun: bool = args.dry_run
   verbose: bool = args.verbose
   max_to_keep: int = args.max_to_keep
   exclude: List[str] = args.exclude or []
 
-  processor = backup_processor.BackupProcessor(dryrun=dryrun,
-                                               verbose=verbose,
-                                               only_if_changed=only_if_changed,
-                                               minimum_delay_secs=human_interval.parse_to_secs(args.minimum_wait))
+  processor = backup_processor.BackupProcessor(
+      dryrun=dryrun,
+      verbose=verbose,
+      only_if_changed=only_if_changed,
+      low_ram=low_ram,
+      minimum_delay_secs=human_interval.parse_to_secs(args.minimum_wait))
   processor.process(source, target, max_to_keep, exclude)
 
   if dryrun:

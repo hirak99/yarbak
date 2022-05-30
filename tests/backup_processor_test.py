@@ -81,6 +81,7 @@ class TestBackupProcessor(unittest.TestCase):
     processor = backup_processor.BackupProcessor(dryrun=False,
                                                  verbose=False,
                                                  only_if_changed=True,
+                                                 low_ram=True,
                                                  minimum_delay_secs=60)
 
     # Run.
@@ -129,7 +130,10 @@ class TestBackupProcessor(unittest.TestCase):
                                                     'payload')))
 
   def _process(self, *args, **kwargs_in) -> List[str]:
-    processor = backup_processor.BackupProcessor(dryrun=True, verbose=True)
+    processor = backup_processor.BackupProcessor(dryrun=True,
+                                                 verbose=True,
+                                                 only_if_changed=True,
+                                                 low_ram=True)
     kwargs = dict(max_to_keep=-1, excludes=[])
     kwargs.update(kwargs_in)
     result = processor._process_iterator(*args, **kwargs)
