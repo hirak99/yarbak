@@ -88,6 +88,7 @@ class TestBackupProcessor(unittest.TestCase):
     processor.process(self._source_dir,
                       self._backup_dir,
                       max_to_keep=5,
+                      min_to_keep=0,
                       excludes=[])
     # Compare.
     target_copy_dir = os.path.join(self._backup_dir, 'ysnap_20220314_235219')
@@ -104,6 +105,7 @@ class TestBackupProcessor(unittest.TestCase):
     processor.process(self._source_dir,
                       self._backup_dir,
                       max_to_keep=5,
+                      min_to_keep=0,
                       excludes=[])
     # Expect no change (since only_if_changed=True).
     target_copy_dir = os.path.join(self._backup_dir, 'ysnap_20220320_000000')
@@ -123,18 +125,51 @@ class TestBackupProcessor(unittest.TestCase):
     processor.process(self._source_dir,
                       self._backup_dir,
                       max_to_keep=5,
+                      min_to_keep=0,
                       excludes=[])
     # Compare again.
     self.assertTrue(
         _dir_compare(self._source_dir, os.path.join(target_copy_dir,
                                                     'payload')))
 
+  # Run the functions on an actual directory structure.
+  def test_many_backups(self):
+    processor = backup_processor.BackupProcessor(dryrun=False,
+                                                 verbose=False,
+                                                 only_if_changed=False,
+                                                 low_ram=False)
+    n_backups: int = 0
+
+    def change_and_backup(**kwargs):
+      nonlocal n_backups
+      n_backups += 1
+      with open(os.path.join(self._source_dir, 'file1.txt'), 'w') as f:
+        f.writelines([f'revision #{n_backups}'])
+      # Run.
+      self._fake_now = datetime.datetime(2022, 3, 20, 0, 0,
+                                         0) + datetime.timedelta(days=n_backups)
+      def_kwargs = dict(max_to_keep=-1, min_to_keep=0, excludes=[])
+      def_kwargs.update(kwargs)
+      processor.process(self._source_dir,
+                        self._backup_dir,
+                        **def_kwargs)
+
+    for _ in range(3):
+      change_and_backup(max_to_keep=2)
+    # Even though more than 8 backups were run, number of backups is restricted to 5.
+    self.assertEqual(len(os.listdir(self._backup_dir)), 2)
+
+    for _ in range(2):
+      change_and_backup(max_to_keep=2, min_to_keep=3)
+    # Min to keep takes priority.
+    self.assertEqual(len(os.listdir(self._backup_dir)), 3)
+
   def _process(self, *args, **kwargs_in) -> List[str]:
     processor = backup_processor.BackupProcessor(dryrun=True,
                                                  verbose=True,
                                                  only_if_changed=True,
                                                  low_ram=True)
-    kwargs = dict(max_to_keep=-1, excludes=[])
+    kwargs = dict(max_to_keep=-1, min_to_keep=0, excludes=[])
     kwargs.update(kwargs_in)
     result = processor._process_iterator(*args, **kwargs)
     return list(result)

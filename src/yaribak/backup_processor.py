@@ -83,7 +83,7 @@ class BackupProcessor:
     yield f'[Store metadata at {fname}]'
 
   def _process_iterator(self, source: str, target: str, max_to_keep: int,
-                        excludes: List[str]) -> Iterator[str]:
+                        min_to_keep: int, excludes: List[str]) -> Iterator[str]:
     """Creates an iterator of processes that need to be run for the backup."""
     if not os.path.isdir(target):
       raise ValueError(f'{target!r} is not a valid directory')
@@ -109,7 +109,8 @@ class BackupProcessor:
       meta_fname = os.path.join(latest, 'backup_context.json')
       old_metadata = metadata.Metadata.load_from(meta_fname)
 
-      delay_since = _now_epoch() - old_metadata.last_updated() + _ELAPSED_TIME_BUFFER
+      delay_since = _now_epoch() - old_metadata.last_updated(
+      ) + _ELAPSED_TIME_BUFFER
       if delay_since < self._minimum_delay_secs:
         logging.info(f'Nothing to do since elapsed time {delay_since:0.2f} '
                      f'is less than {self._minimum_delay_secs}.')
@@ -162,6 +163,8 @@ class BackupProcessor:
 
     # Delete older backups.
     if folders and max_to_keep >= 1:
+      if min_to_keep > 0:
+        max_to_keep = max(max_to_keep, min_to_keep)
       num_to_remove = len(folders) + 1 - max_to_keep
       if num_to_remove > 0:
         for folder in sorted(folders)[:num_to_remove]:

@@ -53,11 +53,16 @@ def main():
                       default='0s',
                       help=('Minimum time before next backup'
                             ' will be attempted. E.g. 2day'))
-  parser.add_argument(
-      '--max-to-keep',
-      type=int,
-      default=-1,
-      help='How many backups to store. A value of 0 or less disables this.')
+  parser.add_argument('--max-to-keep',
+                      type=int,
+                      default=-1,
+                      help=('How many backups to store. '
+                            'A value of 0 or less disables this.'))
+  parser.add_argument('--min-to-keep',
+                      type=int,
+                      default=0,
+                      help=('How many minimum backups to store. '
+                            'Cannot be used with --max-to-keep.'))
   parser.add_argument('--only-if-changed',
                       action='store_true',
                       help='Do not keep the backup if there is no change.')
@@ -83,6 +88,7 @@ def main():
   dryrun: bool = args.dry_run
   verbose: bool = args.verbose
   max_to_keep: int = args.max_to_keep
+  min_to_keep: int = args.min_to_keep
   exclude: List[str] = args.exclude or []
 
   processor = backup_processor.BackupProcessor(
@@ -91,7 +97,11 @@ def main():
       only_if_changed=only_if_changed,
       low_ram=low_ram,
       minimum_delay_secs=human_interval.parse_to_secs(args.minimum_wait))
-  processor.process(source, target, max_to_keep, exclude)
+  processor.process(source=source,
+                    target=target,
+                    max_to_keep=max_to_keep,
+                    min_to_keep=min_to_keep,
+                    exclude=exclude)
 
   if dryrun:
     logging.info('Called with --dry-run, nothing was changed.')
