@@ -96,8 +96,10 @@ yaribak \
 # --dryrun
 # --verbose
 # --only-if-changed
-# --max-to-keep=3
-# --minimum-wait=2day
+# --min_ttl=7days
+# --min-to-keep=5
+# --max-to-keep=10
+# --minimum-wait=2days
 # --exclude source_subdir1 --exclude source_subdir2 ...
 ```
 
@@ -138,7 +140,9 @@ Each directory will have a full copy of the source.
 
 The primary reason to use this over a simple `cp -r` is that it saves space.
 
-Any file that remains unchanged will be hard linked, effectively resulting in very little space consumption for multiple invocation if the source remains largely unchanged.
+Any file that remains unchanged will be hard linked, effectively resulting in
+very little space consumption for multiple invocation if the source remains
+largely unchanged.
 
 ```bash
 $ # Size of source directory.

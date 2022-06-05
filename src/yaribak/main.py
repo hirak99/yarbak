@@ -26,7 +26,7 @@ import os
 from . import backup_processor
 from . import human_interval
 
-from typing import List
+from typing import List, Optional
 
 
 def _absolute_path(path: str) -> str:
@@ -52,24 +52,29 @@ def main():
                       type=str,
                       default='0s',
                       help=('Minimum time before next backup'
-                            ' will be attempted. E.g. 2day'))
+                            ' will be attempted. E.g. 2days.'))
   parser.add_argument('--max-to-keep',
                       type=int,
                       default=-1,
                       help=('How many backups to store. '
                             'A value of 0 or less disables this.'))
+  parser.add_argument('--min_ttl',
+                      type=str,
+                      default='',
+                      help='Time to live. E.g. 7days, 1year, etc.')
   parser.add_argument('--min-to-keep',
                       type=int,
                       default=0,
                       help=('How many minimum backups to store. '
-                            'Cannot be used with --max-to-keep.'))
+                            'Will take precedence over --min_ttl.'))
   parser.add_argument('--only-if-changed',
                       action='store_true',
                       help='Do not keep the backup if there is no change.')
   # This actually doesn't save much, ~150 bytes per file, or 15M for 100k files.
-  parser.add_argument('--low-ram',
-                      action='store_true',
-                      help='Lowers memory usage a little. Can miss hard links.')
+  parser.add_argument(
+      '--low-ram',
+      action='store_true',
+      help='Lowers memory usage a little. Can miss hard links.')
   parser.add_argument('--verbose',
                       action='store_true',
                       help='Passes -v to rsync.')
@@ -87,21 +92,25 @@ def main():
   low_ram: bool = args.low_ram
   dryrun: bool = args.dry_run
   verbose: bool = args.verbose
+  min_ttl: Optional[float] = None
+  if args.min_ttl:
+    min_ttl = human_interval.parse_to_secs(args.min_ttl)
   max_to_keep: int = args.max_to_keep
   min_to_keep: int = args.min_to_keep
+  minimum_wait: float = human_interval.parse_to_secs(args.minimum_wait)
   exclude: List[str] = args.exclude or []
 
-  processor = backup_processor.BackupProcessor(
-      dryrun=dryrun,
-      verbose=verbose,
-      only_if_changed=only_if_changed,
-      low_ram=low_ram,
-      minimum_delay_secs=human_interval.parse_to_secs(args.minimum_wait))
+  processor = backup_processor.BackupProcessor(dryrun=dryrun,
+                                               verbose=verbose,
+                                               only_if_changed=only_if_changed,
+                                               low_ram=low_ram,
+                                               minimum_delay_secs=minimum_wait)
   processor.process(source=source,
                     target=target,
                     max_to_keep=max_to_keep,
                     min_to_keep=min_to_keep,
-                    exclude=exclude)
+                    exclude=exclude,
+                    min_ttl=min_ttl)
 
   if dryrun:
     logging.info('Called with --dry-run, nothing was changed.')

@@ -28,7 +28,8 @@ class TestMetadata(unittest.TestCase):
     self.assertEqual(json_obj, {
         'source': '/path/to/source',
         'epoch': 1234,
-        'updated_epoch': None
+        'updated_epoch': None,
+        'min_ttl': None
     })
 
     data2 = metadata.Metadata.fromjson(json_str)

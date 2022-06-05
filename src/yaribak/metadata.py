@@ -14,6 +14,7 @@
 
 import dataclasses
 import json
+import os
 
 from typing import Optional
 
@@ -25,6 +26,8 @@ class Metadata:
   epoch: int
   # Present if the backup was updated when called with only-if-changed.
   updated_epoch: Optional[int] = None
+  # Duration after which this backup may be erased.
+  min_ttl: Optional[float] = None
 
   def last_updated(self) -> int:
     """Unlike updated_epoch, this is not None."""
@@ -40,6 +43,9 @@ class Metadata:
     return Metadata(**json.loads(json_str))
 
   def save_to(self, fname: str) -> None:
+    if os.path.exists(fname):
+      # Erase before writing, to ensure this is not a hardlinked file.
+      os.remove(fname)
     with open(fname, 'w') as f:
       f.write(self.asjson())
 

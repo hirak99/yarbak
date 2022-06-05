@@ -89,7 +89,8 @@ class TestBackupProcessor(unittest.TestCase):
                       self._backup_dir,
                       max_to_keep=5,
                       min_to_keep=0,
-                      excludes=[])
+                      excludes=[],
+                      min_ttl=None)
     # Compare.
     target_copy_dir = os.path.join(self._backup_dir, 'ysnap_20220314_235219')
     self.assertTrue(
@@ -106,7 +107,8 @@ class TestBackupProcessor(unittest.TestCase):
                       self._backup_dir,
                       max_to_keep=5,
                       min_to_keep=0,
-                      excludes=[])
+                      excludes=[],
+                      min_ttl=None)
     # Expect no change (since only_if_changed=True).
     target_copy_dir = os.path.join(self._backup_dir, 'ysnap_20220320_000000')
     self.assertFalse(os.path.isdir(target_copy_dir))
@@ -126,7 +128,8 @@ class TestBackupProcessor(unittest.TestCase):
                       self._backup_dir,
                       max_to_keep=5,
                       min_to_keep=0,
-                      excludes=[])
+                      excludes=[],
+                      min_ttl=None)
     # Compare again.
     self.assertTrue(
         _dir_compare(self._source_dir, os.path.join(target_copy_dir,
@@ -148,11 +151,12 @@ class TestBackupProcessor(unittest.TestCase):
       # Run.
       self._fake_now = datetime.datetime(2022, 3, 20, 0, 0,
                                          0) + datetime.timedelta(days=n_backups)
-      def_kwargs = dict(max_to_keep=-1, min_to_keep=0, excludes=[])
+      def_kwargs = dict(max_to_keep=-1,
+                        min_to_keep=0,
+                        excludes=[],
+                        min_ttl=None)
       def_kwargs.update(kwargs)
-      processor.process(self._source_dir,
-                        self._backup_dir,
-                        **def_kwargs)
+      processor.process(self._source_dir, self._backup_dir, **def_kwargs)
 
     for _ in range(3):
       change_and_backup(max_to_keep=2)
@@ -164,12 +168,19 @@ class TestBackupProcessor(unittest.TestCase):
     # Min to keep takes priority.
     self.assertEqual(len(os.listdir(self._backup_dir)), 3)
 
+    change_and_backup(max_to_keep=2, min_ttl=60 * 60 * 24 * 365)
+    self.assertEqual(len(os.listdir(self._backup_dir)), 2)
+    change_and_backup(max_to_keep=2, min_ttl=60 * 60 * 24 * 365)
+    self.assertEqual(len(os.listdir(self._backup_dir)), 2)
+    change_and_backup(max_to_keep=2, min_ttl=60 * 60 * 24 * 365)
+    self.assertEqual(len(os.listdir(self._backup_dir)), 3)
+
   def _process(self, *args, **kwargs_in) -> List[str]:
     processor = backup_processor.BackupProcessor(dryrun=True,
                                                  verbose=True,
                                                  only_if_changed=True,
                                                  low_ram=True)
-    kwargs = dict(max_to_keep=-1, min_to_keep=0, excludes=[])
+    kwargs = dict(max_to_keep=-1, min_to_keep=0, excludes=[], min_ttl=None)
     kwargs.update(kwargs_in)
     result = processor._process_iterator(*args, **kwargs)
     return list(result)

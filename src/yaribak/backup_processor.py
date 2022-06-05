@@ -73,17 +73,39 @@ class BackupProcessor:
       subprocess.run(command.split(' '), check=True)
     yield command
 
-  def _create_metadata(self, directory: str, source: str) -> Iterator[str]:
+  def _create_metadata(self, directory: str, source: str,
+                       min_ttl: Optional[float]) -> Iterator[str]:
     data = metadata.Metadata(source=source,
                              epoch=int(_now_epoch()),
-                             updated_epoch=int(_now_epoch()))
+                             updated_epoch=int(_now_epoch()),
+                             min_ttl=min_ttl)
     fname = os.path.join(directory, 'backup_context.json')
     if not self._dryrun:
       data.save_to(fname)
     yield f'[Store metadata at {fname}]'
 
+  def _delete_older_backups(self, folders: List[str], min_to_keep: int,
+                            max_to_keep: int) -> Iterator[str]:
+    """Deletes older backups, after reading and honoring min_ttl."""
+    if folders and max_to_keep >= 1:
+      if min_to_keep > 0:
+        max_to_keep = max(max_to_keep, min_to_keep)
+      num_to_remove = len(folders) + 1 - max_to_keep
+      for folder in sorted(folders):
+        if num_to_remove == 0:
+          break
+        meta_fname = os.path.join(folder, 'backup_context.json')
+        old_metadata = metadata.Metadata.load_from(meta_fname)
+        if old_metadata.min_ttl is not None:
+          elapsed = _now_epoch() - old_metadata.last_updated()
+          if old_metadata.min_ttl > elapsed:
+            continue
+        yield from self._execute_sh(f'rm -r {folder}')
+        num_to_remove -= 1
+
   def _process_iterator(self, source: str, target: str, max_to_keep: int,
-                        min_to_keep: int, excludes: List[str]) -> Iterator[str]:
+                        min_to_keep: int, excludes: List[str],
+                        min_ttl: Optional[float]) -> Iterator[str]:
     """Creates an iterator of processes that need to be run for the backup."""
     if not os.path.isdir(target):
       raise ValueError(f'{target!r} is not a valid directory')
@@ -128,7 +150,9 @@ class BackupProcessor:
       owner, group = source_path.owner(), source_path.group()
       yield from self._execute_sh(f'chown {owner}:{group} {new_backup}')
 
-    yield from self._create_metadata(directory=new_backup, source=source)
+    yield from self._create_metadata(directory=new_backup,
+                                     source=source,
+                                     min_ttl=min_ttl)
 
     # List that will be joined to get the final command.
     new_backup_payload = os.path.join(new_backup, 'payload')
@@ -161,14 +185,7 @@ class BackupProcessor:
     if not self._dryrun:
       shutil.move(new_backup, final_directory)
 
-    # Delete older backups.
-    if folders and max_to_keep >= 1:
-      if min_to_keep > 0:
-        max_to_keep = max(max_to_keep, min_to_keep)
-      num_to_remove = len(folders) + 1 - max_to_keep
-      if num_to_remove > 0:
-        for folder in sorted(folders)[:num_to_remove]:
-          yield from self._execute_sh(f'rm -r {folder}')
+    yield from self._delete_older_backups(folders, min_to_keep, max_to_keep)
 
   def process(self, *args, **kwargs) -> None:
     # Just runs through the iterator.
