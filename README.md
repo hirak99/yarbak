@@ -96,8 +96,7 @@ yaribak \
 # --dryrun
 # --verbose
 # --only-if-changed
-# --min_ttl=7days
-# --min-to-keep=5
+# --min-ttl=7days
 # --max-to-keep=10
 # --minimum-wait=2days
 # --exclude source_subdir1 --exclude source_subdir2 ...

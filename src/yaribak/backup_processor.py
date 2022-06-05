@@ -84,12 +84,10 @@ class BackupProcessor:
       data.save_to(fname)
     yield f'[Store metadata at {fname}]'
 
-  def _delete_older_backups(self, folders: List[str], min_to_keep: int,
+  def _delete_older_backups(self, folders: List[str],
                             max_to_keep: int) -> Iterator[str]:
     """Deletes older backups, after reading and honoring min_ttl."""
     if folders and max_to_keep >= 1:
-      if min_to_keep > 0:
-        max_to_keep = max(max_to_keep, min_to_keep)
       num_to_remove = len(folders) + 1 - max_to_keep
       for folder in sorted(folders):
         if num_to_remove == 0:
@@ -104,7 +102,7 @@ class BackupProcessor:
         num_to_remove -= 1
 
   def _process_iterator(self, source: str, target: str, max_to_keep: int,
-                        min_to_keep: int, excludes: List[str],
+                        excludes: List[str],
                         min_ttl: Optional[float]) -> Iterator[str]:
     """Creates an iterator of processes that need to be run for the backup."""
     if not os.path.isdir(target):
@@ -185,7 +183,7 @@ class BackupProcessor:
     if not self._dryrun:
       shutil.move(new_backup, final_directory)
 
-    yield from self._delete_older_backups(folders, min_to_keep, max_to_keep)
+    yield from self._delete_older_backups(folders, max_to_keep)
 
   def process(self, *args, **kwargs) -> None:
     # Just runs through the iterator.

@@ -88,7 +88,6 @@ class TestBackupProcessor(unittest.TestCase):
     processor.process(self._source_dir,
                       self._backup_dir,
                       max_to_keep=5,
-                      min_to_keep=0,
                       excludes=[],
                       min_ttl=None)
     # Compare.
@@ -106,7 +105,6 @@ class TestBackupProcessor(unittest.TestCase):
     processor.process(self._source_dir,
                       self._backup_dir,
                       max_to_keep=5,
-                      min_to_keep=0,
                       excludes=[],
                       min_ttl=None)
     # Expect no change (since only_if_changed=True).
@@ -127,7 +125,6 @@ class TestBackupProcessor(unittest.TestCase):
     processor.process(self._source_dir,
                       self._backup_dir,
                       max_to_keep=5,
-                      min_to_keep=0,
                       excludes=[],
                       min_ttl=None)
     # Compare again.
@@ -152,7 +149,6 @@ class TestBackupProcessor(unittest.TestCase):
       self._fake_now = datetime.datetime(2022, 3, 20, 0, 0,
                                          0) + datetime.timedelta(days=n_backups)
       def_kwargs = dict(max_to_keep=-1,
-                        min_to_keep=0,
                         excludes=[],
                         min_ttl=None)
       def_kwargs.update(kwargs)
@@ -162,11 +158,6 @@ class TestBackupProcessor(unittest.TestCase):
       change_and_backup(max_to_keep=2)
     # Even though more than 8 backups were run, number of backups is restricted to 5.
     self.assertEqual(len(os.listdir(self._backup_dir)), 2)
-
-    for _ in range(2):
-      change_and_backup(max_to_keep=2, min_to_keep=3)
-    # Min to keep takes priority.
-    self.assertEqual(len(os.listdir(self._backup_dir)), 3)
 
     change_and_backup(max_to_keep=2, min_ttl=60 * 60 * 24 * 365)
     self.assertEqual(len(os.listdir(self._backup_dir)), 2)
@@ -180,7 +171,7 @@ class TestBackupProcessor(unittest.TestCase):
                                                  verbose=True,
                                                  only_if_changed=True,
                                                  low_ram=True)
-    kwargs = dict(max_to_keep=-1, min_to_keep=0, excludes=[], min_ttl=None)
+    kwargs = dict(max_to_keep=-1, excludes=[], min_ttl=None)
     kwargs.update(kwargs_in)
     result = processor._process_iterator(*args, **kwargs)
     return list(result)

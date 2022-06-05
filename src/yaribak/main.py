@@ -53,28 +53,24 @@ def main():
                       default='0s',
                       help=('Minimum time before next backup'
                             ' will be attempted. E.g. 2days.'))
+  parser.add_argument('--min-ttl',
+                      type=str,
+                      default='',
+                      help=('Guaranteed time to live. E.g. 7days, 1year, etc. '
+                            'Takes priority over --max-to-keep. '
+                            'Deletion will happen only if max-to-keep is >0.'))
   parser.add_argument('--max-to-keep',
                       type=int,
                       default=-1,
                       help=('How many backups to store. '
                             'A value of 0 or less disables this.'))
-  parser.add_argument('--min_ttl',
-                      type=str,
-                      default='',
-                      help='Time to live. E.g. 7days, 1year, etc.')
-  parser.add_argument('--min-to-keep',
-                      type=int,
-                      default=0,
-                      help=('How many minimum backups to store. '
-                            'Will take precedence over --min_ttl.'))
   parser.add_argument('--only-if-changed',
                       action='store_true',
                       help='Do not keep the backup if there is no change.')
   # This actually doesn't save much, ~150 bytes per file, or 15M for 100k files.
-  parser.add_argument(
-      '--low-ram',
-      action='store_true',
-      help='Lowers memory usage a little. Can miss hard links.')
+  parser.add_argument('--low-ram',
+                      action='store_true',
+                      help='Lowers memory usage a little. Can miss hard links.')
   parser.add_argument('--verbose',
                       action='store_true',
                       help='Passes -v to rsync.')
@@ -96,7 +92,6 @@ def main():
   if args.min_ttl:
     min_ttl = human_interval.parse_to_secs(args.min_ttl)
   max_to_keep: int = args.max_to_keep
-  min_to_keep: int = args.min_to_keep
   minimum_wait: float = human_interval.parse_to_secs(args.minimum_wait)
   exclude: List[str] = args.exclude or []
 
@@ -108,8 +103,7 @@ def main():
   processor.process(source=source,
                     target=target,
                     max_to_keep=max_to_keep,
-                    min_to_keep=min_to_keep,
-                    exclude=exclude,
+                    excludes=exclude,
                     min_ttl=min_ttl)
 
   if dryrun:
