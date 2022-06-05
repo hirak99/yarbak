@@ -80,7 +80,7 @@ def main():
   # Creates a list of strings.
   parser.add_argument('--exclude',
                       action='append',
-                      help='Directories to exclude')
+                      help='Directories to exclude.')
   args = parser.parse_args()
   source = _absolute_path(args.source)
   target = _absolute_path(args.backup_path)

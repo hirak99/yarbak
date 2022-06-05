@@ -61,8 +61,10 @@ class BackupProcessor:
     if not low_ram:
       # Forces collecting all hard links before running the backup.
       # See https://lincolnloop.com/blog/detecting-file-moves-renames-rsync/
-      self._rsync_flags += ' --no-inc-recursive'
-    self._rsync_flags += ' --delete --delete-excluded'
+      self._rsync_flags += ' --no-inc-recursive --delete-after'
+    else:
+      self._rsync_flags += ' --delete'
+    self._rsync_flags += ' --delete-excluded'
     self._only_if_changed = only_if_changed
     self._minimum_delay_secs = minimum_delay_secs
 
