@@ -1,5 +1,5 @@
 dist/*
 yaribak.egg-info
 __pycache__
-__notes.md
+__yaribak_notes.md
 .vscode/*
