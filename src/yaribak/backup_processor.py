@@ -89,19 +89,24 @@ class BackupProcessor:
   def _delete_older_backups(self, folders: List[str],
                             max_to_keep: int) -> Iterator[str]:
     """Deletes older backups, after reading and honoring min_ttl."""
-    if folders and max_to_keep >= 1:
-      num_to_remove = len(folders) + 1 - max_to_keep
-      for folder in sorted(folders):
-        if num_to_remove == 0:
-          break
-        meta_fname = os.path.join(folder, 'backup_context.json')
-        old_metadata = metadata.Metadata.load_from(meta_fname)
-        if old_metadata.min_ttl is not None:
-          elapsed = _now_epoch() - old_metadata.last_updated()
-          if old_metadata.min_ttl > elapsed:
-            continue
-        yield from self._execute_sh(f'rm -r {folder}')
-        num_to_remove -= 1
+    if not folders or max_to_keep < 1:
+      return
+    num_deleted = 0
+    for folder in sorted(folders):
+      if len(folders) - num_deleted + 1 <= max_to_keep:
+        logging.info(f'Deleted old dirs {num_deleted} out of {len(folders)}.')
+        break
+      meta_fname = os.path.join(folder, 'backup_context.json')
+      old_metadata = metadata.Metadata.load_from(meta_fname)
+      if old_metadata.min_ttl is not None:
+        elapsed = _now_epoch() - old_metadata.last_updated()
+        logging.info(f'{folder} has ttl {old_metadata.min_ttl:0.1f}; '
+                     f'elapsed {elapsed:0.1f}')
+        if old_metadata.min_ttl > elapsed:
+          logging.info('Skipping deletion.')
+          continue
+      yield from self._execute_sh(f'rm -r {folder}')
+      num_deleted += 1
 
   def _process_iterator(self, source: str, target: str, max_to_keep: int,
                         excludes: List[str],
