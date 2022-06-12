@@ -68,11 +68,16 @@ class BackupProcessor:
     self._only_if_changed = only_if_changed
     self._minimum_delay_secs = minimum_delay_secs
 
-  def _execute_sh(self, command: str) -> Iterator[str]:
+  def _execute_sh(self, command: str, error_ok=False) -> Iterator[str]:
     """Optionally executes, and returns the command back for logging."""
     if not self._dryrun:
       logging.info(f'Running {command}')
-      subprocess.run(command.split(' '), check=True)
+      try:
+        subprocess.run(command.split(' '), check=True)
+      except subprocess.CalledProcessError as e:
+        if not error_ok:
+          raise e
+        logging.warn(f'Process had error {e}')
     yield command
 
   def _create_metadata(self, directory: str, source: str,
@@ -166,7 +171,8 @@ class BackupProcessor:
     ]
     for exclude in excludes:
       command_build.append(f'--exclude={exclude}')
-    yield from self._execute_sh(' '.join(command_build))
+    # Ignore rsync errors (e.g. if some files moved before copied).
+    yield from self._execute_sh(' '.join(command_build), error_ok=True)
 
     # Backup is done. Remaining steps are for cleaning up.
 
